@@ -24,7 +24,6 @@ packages = ["feather"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "feather/proto" = "feather/proto"
-"feather/_gen" = "feather/_gen"
 
 [tool.hatch.build.targets.sdist]
 include = ["feather/**/*.py", "feather/proto/**/*.proto"]

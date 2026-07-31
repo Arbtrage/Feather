@@ -86,12 +86,19 @@ impl RedisStore {
             failure_reason: map.get("failure_reason").filter(|s| !s.is_empty()).cloned(),
             workflow_run_id: map.get("workflow_run_id").cloned().unwrap_or_default(),
             activity_id: map.get("activity_id").cloned().unwrap_or_default(),
-            lease_renewals: map.get("lease_renewals").and_then(|s| s.parse().ok()).unwrap_or(0),
+            lease_renewals: map
+                .get("lease_renewals")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0),
         })
     }
 
     async fn append_event(&self, job_id: &str, event: &str) -> StorageResult<()> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let key = self.keys.job_events(job_id);
         let ts = Utc::now().timestamp_millis();
         let _: () = conn
@@ -115,7 +122,11 @@ fn base64_decode(s: &str) -> Vec<u8> {
 #[async_trait]
 impl ActivityQueueStore for RedisStore {
     async fn enqueue(&self, job: Job) -> StorageResult<()> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let job_key = self.keys.job(&job.id);
         let pending = self.keys.queue_pending(&job.queue);
         let recent = self.keys.recent_jobs();
@@ -125,7 +136,11 @@ impl ActivityQueueStore for RedisStore {
         pipe.atomic();
         pipe.hset_multiple(&job_key, &fields);
         pipe.lpush(&pending, &job.id);
-        pipe.zadd(&recent, job.id.as_str(), job.created_at.timestamp_millis() as f64);
+        pipe.zadd(
+            &recent,
+            job.id.as_str(),
+            job.created_at.timestamp_millis() as f64,
+        );
         pipe.query_async::<()>(&mut conn)
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;
@@ -147,7 +162,11 @@ impl ActivityQueueStore for RedisStore {
         let job_prefix = self.keys.job_prefix();
 
         for queue in queues {
-            let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+            let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
             let pending = self.keys.queue_pending(queue);
             let leased_key = self.keys.queue_leased(queue);
 
@@ -193,7 +212,11 @@ impl ActivityQueueStore for RedisStore {
             return Err(StorageError::PreconditionFailed("wrong worker".into()));
         }
 
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let job_key = self.keys.job(job_id);
         let leased_key = self.keys.queue_leased(&job.queue);
 
@@ -216,7 +239,11 @@ impl ActivityQueueStore for RedisStore {
             return Err(StorageError::PreconditionFailed("wrong worker".into()));
         }
 
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let job_key = self.keys.job(job_id);
         let leased_key = self.keys.queue_leased(&job.queue);
 
@@ -253,7 +280,11 @@ impl ActivityQueueStore for RedisStore {
         job.lease_expires_at = Some(new_expiry);
         job.lease_renewals += 1;
 
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let job_key = self.keys.job(job_id);
         let leased_key = self.keys.queue_leased(&job.queue);
         let lease_ms = new_expiry.timestamp_millis();
@@ -271,9 +302,16 @@ impl ActivityQueueStore for RedisStore {
     }
 
     async fn get_job(&self, job_id: &str) -> StorageResult<Job> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let job_key = self.keys.job(job_id);
-        let map: HashMap<String, String> = conn.hgetall(&job_key).await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let map: HashMap<String, String> = conn
+            .hgetall(&job_key)
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         if map.is_empty() {
             return Err(StorageError::NotFound);
         }
@@ -281,7 +319,11 @@ impl ActivityQueueStore for RedisStore {
     }
 
     async fn release_expired_leases(&self) -> StorageResult<u64> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let now_ms = Utc::now().timestamp_millis() as f64;
         let mut released = 0u64;
 
@@ -333,7 +375,11 @@ impl ActivityQueueStore for RedisStore {
         state: Option<JobState>,
         limit: usize,
     ) -> StorageResult<Vec<Job>> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let ids: Vec<String> = conn
             .zrevrange(self.keys.recent_jobs(), 0, (limit as isize * 4).max(100) - 1)
             .await
@@ -383,7 +429,11 @@ impl ActivityQueueStore for RedisStore {
     }
 
     async fn ping(&self) -> StorageResult<()> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         redis::cmd("PING")
             .query_async::<String>(&mut conn)
             .await
@@ -394,7 +444,11 @@ impl ActivityQueueStore for RedisStore {
 
 impl RedisStore {
     async fn trim_recent(&self) -> StorageResult<()> {
-        let mut conn = self.pool.get().await.map_err(|e| StorageError::Redis(e.to_string()))?;
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
         let _: () = conn
             .zremrangebyrank(
                 self.keys.recent_jobs(),

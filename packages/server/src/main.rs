@@ -41,7 +41,9 @@ async fn main() -> anyhow::Result<()> {
     let grpc_addr: std::net::SocketAddr = config.server.grpc_addr.parse()?;
     let http_addr: std::net::SocketAddr = config.server.http_addr.parse()?;
 
-    let admin_state = AdminState { store: store.clone() };
+    let admin_state = AdminState {
+        store: store.clone(),
+    };
     let lease_ms = config.default_lease_duration_ms;
 
     let grpc = tokio::spawn(async move {

@@ -9,7 +9,8 @@ use std::time::Instant;
 #[tokio::test]
 #[ignore]
 async fn enqueue_bench_500_per_sec() {
-    let url = std::env::var("FEATHER_REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".into());
+    let url =
+        std::env::var("FEATHER_REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".into());
     let ns = format!("bench-{}", uuid::Uuid::new_v4());
     let store = Arc::new(RedisStore::new(&url, &ns, 50_000).expect("store"));
 

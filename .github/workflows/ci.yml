@@ -49,9 +49,13 @@ jobs:
         with:
           python-version: "3.12"
       - name: install sdk
-        run: pip install ./packages/sdk-python
+        run: |
+          pip install grpcio-tools
+          chmod +x scripts/bundle-protos.sh
+          ./scripts/bundle-protos.sh
+          pip install ./packages/sdk-python
       - name: import check
-        run: python -c "from feather import FeatherClient, Worker"
+        run: python -c "from feather import FeatherApp, FeatherClient, Worker"
 
   dashboard:
     runs-on: ubuntu-latest

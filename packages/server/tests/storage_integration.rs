@@ -63,7 +63,10 @@ async fn nack_marks_failed() {
     );
     let job_id = job.id.clone();
     store.enqueue(job).await.unwrap();
-    store.dequeue("w", &["default".into()], 30_000).await.unwrap();
+    store
+        .dequeue("w", &["default".into()], 30_000)
+        .await
+        .unwrap();
 
     store.nack(&job_id, "w", "boom").await.unwrap();
     let failed = store.get_job(&job_id).await.unwrap();
