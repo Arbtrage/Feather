@@ -74,7 +74,7 @@ impl RedisStore {
             queue: map.get("queue")?.clone(),
             name: map.get("name")?.clone(),
             payload: base64_decode(map.get("payload").map(String::as_str).unwrap_or("")),
-            state: JobState::from_str(map.get("state")?)?,
+            state: map.get("state")?.parse().ok()?,
             priority: map.get("priority")?.parse().unwrap_or(0),
             attempt: map.get("attempt")?.parse().unwrap_or(1),
             worker_id: map.get("worker_id").filter(|s| !s.is_empty()).cloned(),
@@ -481,7 +481,7 @@ impl RedisStore {
             .zremrangebyrank(
                 self.keys.recent_jobs(),
                 0,
-                -(self.recent_history_limit as i64 + 1),
+                -(self.recent_history_limit as isize + 1),
             )
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;

@@ -41,8 +41,8 @@ impl QueueService {
         payload: Vec<u8>,
         priority: i32,
     ) -> Result<Job, StorageError> {
-        Self::validate_queue(queue).map_err(|e| StorageError::Other(e))?;
-        Self::validate_task_name(name).map_err(|e| StorageError::Other(e))?;
+        Self::validate_queue(queue).map_err(StorageError::Other)?;
+        Self::validate_task_name(name).map_err(StorageError::Other)?;
         if payload.len() > self.config.max_payload_bytes {
             return Err(StorageError::Other(format!(
                 "payload exceeds max {} bytes",

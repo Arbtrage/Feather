@@ -20,14 +20,18 @@ impl JobState {
             JobState::Failed => "failed",
         }
     }
+}
 
-    pub fn from_str(s: &str) -> Option<Self> {
+impl std::str::FromStr for JobState {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "pending" => Some(JobState::Pending),
-            "leased" => Some(JobState::Leased),
-            "completed" => Some(JobState::Completed),
-            "failed" => Some(JobState::Failed),
-            _ => None,
+            "pending" => Ok(JobState::Pending),
+            "leased" => Ok(JobState::Leased),
+            "completed" => Ok(JobState::Completed),
+            "failed" => Ok(JobState::Failed),
+            _ => Err(()),
         }
     }
 }

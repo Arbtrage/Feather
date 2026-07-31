@@ -190,7 +190,7 @@ impl WorkerService for WorkerGrpc {
                 req.metadata,
             )
             .await
-            .map_err(|e| Status::invalid_argument(e))?;
+            .map_err(Status::invalid_argument)?;
         Ok(Response::new(RegisterResponse {
             lease_duration_ms: self.lease_duration_ms as i32,
             heartbeat_interval_ms: self.inner.heartbeat_interval_ms() as i32,
@@ -205,7 +205,7 @@ impl WorkerService for WorkerGrpc {
         self.inner
             .heartbeat(&req.worker_id)
             .await
-            .map_err(|e| Status::not_found(e))?;
+            .map_err(Status::not_found)?;
         Ok(Response::new(HeartbeatResponse {}))
     }
 
@@ -217,7 +217,7 @@ impl WorkerService for WorkerGrpc {
         self.inner
             .deregister(&req.worker_id)
             .await
-            .map_err(|e| Status::internal(e))?;
+            .map_err(Status::internal)?;
         Ok(Response::new(DeregisterResponse {}))
     }
 }

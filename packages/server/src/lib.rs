@@ -7,5 +7,9 @@ pub mod services;
 pub mod storage;
 
 pub mod proto {
-    tonic::include_proto!("feather.v1");
+    pub mod feather {
+        pub mod v1 {
+            tonic::include_proto!("feather.v1");
+        }
+    }
 }
