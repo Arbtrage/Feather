@@ -48,8 +48,14 @@ impl WorkerService {
         let mut conn = self.pool.get().await.map_err(|e| e.to_string())?;
         let key = self.keys.worker(worker_id);
         let active = self.keys.workers_active();
-        let _: () = conn.hset(&key, "data", json).await.map_err(|e| e.to_string())?;
-        let _: () = conn.sadd(&active, worker_id).await.map_err(|e| e.to_string())?;
+        let _: () = conn
+            .hset(&key, "data", json)
+            .await
+            .map_err(|e| e.to_string())?;
+        let _: () = conn
+            .sadd(&active, worker_id)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -63,7 +69,10 @@ impl WorkerService {
         let mut record: WorkerRecord = serde_json::from_str(&data).map_err(|e| e.to_string())?;
         record.last_heartbeat_at = Utc::now();
         let json = serde_json::to_string(&record).map_err(|e| e.to_string())?;
-        let _: () = conn.hset(&key, "data", json).await.map_err(|e| e.to_string())?;
+        let _: () = conn
+            .hset(&key, "data", json)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(())
     }
 
@@ -72,12 +81,18 @@ impl WorkerService {
         let key = self.keys.worker(worker_id);
         let active = self.keys.workers_active();
         let _: () = conn.del(&key).await.map_err(|e| e.to_string())?;
-        let _: () = conn.srem(&active, worker_id).await.map_err(|e| e.to_string())?;
+        let _: () = conn
+            .srem(&active, worker_id)
+            .await
+            .map_err(|e| e.to_string())?;
         Ok(())
     }
 }
 
-pub async fn run_lease_sweeper(store: Arc<dyn crate::storage::ActivityQueueStore>, interval_ms: u64) {
+pub async fn run_lease_sweeper(
+    store: Arc<dyn crate::storage::ActivityQueueStore>,
+    interval_ms: u64,
+) {
     let mut interval = tokio::time::interval(std::time::Duration::from_millis(interval_ms));
     loop {
         interval.tick().await;

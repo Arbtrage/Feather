@@ -14,7 +14,11 @@ pub struct RedisStore {
 }
 
 impl RedisStore {
-    pub fn new(redis_url: &str, namespace: &str, recent_history_limit: usize) -> StorageResult<Self> {
+    pub fn new(
+        redis_url: &str,
+        namespace: &str,
+        recent_history_limit: usize,
+    ) -> StorageResult<Self> {
         let cfg = Config::from_url(redis_url);
         let pool = cfg
             .create_pool(Some(Runtime::Tokio1))
@@ -45,8 +49,14 @@ impl RedisStore {
                     .map(|t| t.timestamp_millis().to_string())
                     .unwrap_or_default(),
             ),
-            ("created_at".into(), job.created_at.timestamp_millis().to_string()),
-            ("updated_at".into(), job.updated_at.timestamp_millis().to_string()),
+            (
+                "created_at".into(),
+                job.created_at.timestamp_millis().to_string(),
+            ),
+            (
+                "updated_at".into(),
+                job.updated_at.timestamp_millis().to_string(),
+            ),
             (
                 "failure_reason".into(),
                 job.failure_reason.clone().unwrap_or_default(),
@@ -163,10 +173,10 @@ impl ActivityQueueStore for RedisStore {
 
         for queue in queues {
             let mut conn = self
-            .pool
-            .get()
-            .await
-            .map_err(|e| StorageError::Redis(e.to_string()))?;
+                .pool
+                .get()
+                .await
+                .map_err(|e| StorageError::Redis(e.to_string()))?;
             let pending = self.keys.queue_pending(queue);
             let leased_key = self.keys.queue_leased(queue);
 
@@ -223,7 +233,11 @@ impl ActivityQueueStore for RedisStore {
         let mut pipe = redis::pipe();
         pipe.atomic();
         pipe.hset(&job_key, "state", "completed");
-        pipe.hset(&job_key, "updated_at", Utc::now().timestamp_millis().to_string());
+        pipe.hset(
+            &job_key,
+            "updated_at",
+            Utc::now().timestamp_millis().to_string(),
+        );
         pipe.zrem(&leased_key, job_id);
         pipe.query_async::<()>(&mut conn)
             .await
@@ -251,7 +265,11 @@ impl ActivityQueueStore for RedisStore {
         pipe.atomic();
         pipe.hset(&job_key, "state", "failed");
         pipe.hset(&job_key, "failure_reason", reason);
-        pipe.hset(&job_key, "updated_at", Utc::now().timestamp_millis().to_string());
+        pipe.hset(
+            &job_key,
+            "updated_at",
+            Utc::now().timestamp_millis().to_string(),
+        );
         pipe.zrem(&leased_key, job_id);
         pipe.query_async::<()>(&mut conn)
             .await
@@ -342,7 +360,9 @@ impl ActivityQueueStore for RedisStore {
             if job.state != JobState::Leased {
                 continue;
             }
-            let Some(exp) = job.lease_expires_at else { continue };
+            let Some(exp) = job.lease_expires_at else {
+                continue;
+            };
             if exp.timestamp_millis() as f64 > now_ms {
                 continue;
             }
@@ -356,7 +376,11 @@ impl ActivityQueueStore for RedisStore {
             pipe.hset(&job_key, "state", "pending");
             pipe.hset(&job_key, "worker_id", "");
             pipe.hset(&job_key, "lease_expires_at", "");
-            pipe.hset(&job_key, "updated_at", Utc::now().timestamp_millis().to_string());
+            pipe.hset(
+                &job_key,
+                "updated_at",
+                Utc::now().timestamp_millis().to_string(),
+            );
             pipe.zrem(&leased_key, &job_id);
             pipe.lpush(&pending, &job_id);
             pipe.query_async::<()>(&mut conn)
@@ -381,7 +405,11 @@ impl ActivityQueueStore for RedisStore {
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;
         let ids: Vec<String> = conn
-            .zrevrange(self.keys.recent_jobs(), 0, (limit as isize * 4).max(100) - 1)
+            .zrevrange(
+                self.keys.recent_jobs(),
+                0,
+                (limit as isize * 4).max(100) - 1,
+            )
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;
 

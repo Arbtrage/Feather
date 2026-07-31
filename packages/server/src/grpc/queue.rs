@@ -62,12 +62,7 @@ impl QueueService for QueueGrpc {
         let req = request.into_inner();
         let job = self
             .inner
-            .enqueue(
-                &req.queue,
-                &req.name,
-                req.payload,
-                req.priority,
-            )
+            .enqueue(&req.queue, &req.name, req.payload, req.priority)
             .await
             .map_err(map_storage_err)?;
         Ok(Response::new(EnqueueResponse {
@@ -86,16 +81,11 @@ impl QueueService for QueueGrpc {
         } else {
             req.wait_timeout_ms
         };
-        let deadline =
-            tokio::time::Instant::now() + std::time::Duration::from_millis(wait as u64);
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_millis(wait as u64);
         let mut empty_streak = 0u32;
 
         loop {
-            match self
-                .inner
-                .dequeue(&req.worker_id, &req.queues, wait)
-                .await
-            {
+            match self.inner.dequeue(&req.worker_id, &req.queues, wait).await {
                 Ok(Some(job)) => {
                     return Ok(Response::new(DequeueResponse {
                         job: Some(job_to_proto(&job)),

@@ -96,7 +96,9 @@ async fn ready(State(state): State<AdminState>) -> impl IntoResponse {
     }
 }
 
-async fn list_queues(State(state): State<AdminState>) -> Result<Json<serde_json::Value>, StatusCode> {
+async fn list_queues(
+    State(state): State<AdminState>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
     let stats = state
         .store
         .queue_stats("default")
@@ -116,7 +118,9 @@ async fn get_queue(
         .queue_stats(&name)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Json(serde_json::json!({ "data": queue_info(&name, stats) })))
+    Ok(Json(
+        serde_json::json!({ "data": queue_info(&name, stats) }),
+    ))
 }
 
 fn queue_info(name: &str, stats: QueueStats) -> QueueInfo {

@@ -22,8 +22,5 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["feather"]
 
-[tool.hatch.build.targets.wheel.force-include]
-"feather/proto" = "feather/proto"
-
 [tool.hatch.build.targets.sdist]
 include = ["feather/**/*.py", "feather/proto/**/*.proto"]
