@@ -3,7 +3,7 @@
  * No separate worker.js needed.
  */
 import express from "express";
-import { FeatherApp } from "@feather/sdk";
+import { FeatherApp } from "@arbtrage/sdk";
 
 const app = new FeatherApp({
   ui: { enabled: true, port: 3001, adminUrl: "http://localhost:8080" },

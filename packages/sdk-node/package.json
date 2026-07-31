@@ -1,5 +1,5 @@
 {
-  "name": "@feather/sdk",
+  "name": "@arbtrage/sdk",
   "version": "0.1.0",
   "description": "Feather durable execution platform — Node.js SDK",
   "type": "module",

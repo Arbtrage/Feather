@@ -4,7 +4,7 @@ Feather provides a read-only monitoring UI for queue stats and jobs.
 
 ## Recommended: SDK embedded UI
 
-Enable the UI from your application when using `@feather/sdk` or `feather-sdk`:
+Enable the UI from your application when using `@arbtrage/sdk` or `arbtrage-feather-sdk`:
 
 ```javascript
 const app = new FeatherApp({ ui: { enabled: true, port: 3001 } });

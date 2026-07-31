@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build @feather/ui and copy static assets into SDK packages.
+# Build @arbtrage/ui and copy static assets into SDK packages.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 UI="$ROOT/packages/ui"

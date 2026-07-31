@@ -68,7 +68,7 @@ jobs:
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
           npm ci
-          npm run build -w @feather/sdk
+          npm run build -w @arbtrage/sdk
 
       - name: Build Python SDK
         run: |
@@ -104,11 +104,11 @@ jobs:
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
           npm ci
-          npm run build -w @feather/sdk
+          npm run build -w @arbtrage/sdk
           test -d packages/sdk-node/ui-static/assets
           npm pkg fix --prefix packages/sdk-node
 
-      - name: Publish @feather/sdk to npm
+      - name: Publish @arbtrage/sdk to npm
         working-directory: packages/sdk-node
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -138,7 +138,7 @@ jobs:
           python -m pip install "twine>=6.1.0"
           python -m twine check dist/*
 
-      - name: Publish feather-sdk to PyPI
+      - name: Publish arbtrage-feather-sdk to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
@@ -155,5 +155,5 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Package | Registry | Version | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---------|----------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| @feather/sdk | npm | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-npm.result }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| feather-sdk | PyPI | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-pypi.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| @arbtrage/sdk | npm | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-npm.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| arbtrage-feather-sdk | PyPI | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-pypi.result }} |" >> "$GITHUB_STEP_SUMMARY"

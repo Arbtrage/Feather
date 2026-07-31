@@ -1,13 +1,13 @@
 # Python SDK
 
-Package: `feather-sdk` on PyPI (monorepo: `packages/sdk-python/`)
+Package: `arbtrage-feather-sdk` on PyPI (monorepo: `packages/sdk-python/`)
 
 Requires Python 3.11+.
 
 ## Install
 
 ```bash
-pip install feather-sdk
+pip install arbtrage-feather-sdk
 ```
 
 ## Celery-style embedded mode (recommended)

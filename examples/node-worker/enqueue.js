@@ -1,4 +1,4 @@
-import { FeatherClient } from "@feather/sdk";
+import { FeatherClient } from "@arbtrage/sdk";
 
 const client = new FeatherClient(process.env.FEATHER_ADDRESS ?? "localhost:50051");
 
