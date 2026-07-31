@@ -9,8 +9,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from feather.client import FeatherClient
-from feather.worker import Handler, Worker
+from .client import FeatherClient
+from .worker import Handler, Worker
 
 EnqueuePayload = bytes | str | dict[str, Any]
 

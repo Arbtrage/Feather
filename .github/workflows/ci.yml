@@ -61,7 +61,7 @@ jobs:
           ./scripts/bundle-ui.sh
           pip install ./packages/sdk-python
       - name: import check
-        run: python -c "from feather import FeatherApp, FeatherClient, Worker"
+        run: python -c "from arbtrage.feather import FeatherApp, FeatherClient, Worker"
 
   dashboard:
     runs-on: ubuntu-latest

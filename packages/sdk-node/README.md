@@ -1,13 +1,13 @@
-# @arbtrage/sdk
+# @arbtrage/feather
 
 Node.js SDK for [Feather](https://github.com/Arbtrage/Feather) — enqueue tasks, run embedded workers, and optionally serve the monitoring UI.
 
 ## Install
 
-Published to [GitHub Packages](https://github.com/Arbtrage/Feather/pkgs/npm/sdk) (free for public repos):
+Published to [GitHub Packages](https://github.com/Arbtrage/Feather/pkgs/npm/feather) (free for public repos):
 
 ```bash
-npm install @arbtrage/sdk
+npm install @arbtrage/feather
 ```
 
 Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`).
@@ -15,7 +15,7 @@ Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`)
 ## Celery-style (embedded — recommended)
 
 ```javascript
-import { FeatherApp } from "@arbitrage/sdk";
+import { FeatherApp } from "@arbtrage/feather";
 
 const app = new FeatherApp({
   ui: { enabled: true, port: 3001 },
@@ -33,7 +33,7 @@ await app.delay("send-email", { to: "user@example.com" });
 ## Dedicated worker (optional)
 
 ```javascript
-import { Worker } from "@arbitrage/sdk";
+import { Worker } from "@arbtrage/feather";
 
 const worker = new Worker({ queues: ["default"] });
 worker.task("send-email", handler);

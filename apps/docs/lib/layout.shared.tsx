@@ -13,7 +13,7 @@ export function baseOptions(): BaseLayoutProps {
       },
       {
         text: "Packages",
-        url: "https://github.com/Arbtrage/Feather/pkgs/npm/sdk",
+        url: "https://github.com/Arbtrage/Feather/pkgs/npm/feather",
         external: true,
       },
       {

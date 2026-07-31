@@ -1,13 +1,13 @@
 # Node.js SDK
 
-Package: `@arbtrage/sdk` on [GitHub Packages](https://github.com/Arbtrage/Feather/pkgs/npm/sdk) (monorepo: `packages/sdk-node/`)
+Package: `@arbtrage/feather` on [GitHub Packages](https://github.com/Arbtrage/Feather/pkgs/npm/feather) (monorepo: `packages/sdk-node/`)
 
 Requires Node.js 20+.
 
 ## Install
 
 ```bash
-npm install @arbtrage/sdk
+npm install @arbtrage/feather
 ```
 
 If the scope is not resolved, add `.npmrc`:
@@ -27,7 +27,7 @@ cd packages/sdk-node && npm install && npm run build
 Run the worker **inside your app process** — no separate worker deployment:
 
 ```javascript
-import { FeatherApp } from "@arbitrage/sdk";
+import { FeatherApp } from "@arbtrage/feather";
 
 const app = new FeatherApp();
 
@@ -49,7 +49,7 @@ See [Embedded mode](embedded.md) for when to use embedded vs dedicated workers.
 Enqueue jobs and query status:
 
 ```javascript
-import { FeatherClient } from "@arbitrage/sdk";
+import { FeatherClient } from "@arbtrage/feather";
 
 const client = new FeatherClient("localhost:50051");
 
@@ -77,7 +77,7 @@ Set `FEATHER_ADDRESS` to override the default server target (`localhost:50051`).
 Poll, execute, and acknowledge jobs:
 
 ```javascript
-import { Worker } from "@arbitrage/sdk";
+import { Worker } from "@arbtrage/feather";
 
 const worker = new Worker({
   address: process.env.FEATHER_ADDRESS ?? "localhost:50051",

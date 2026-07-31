@@ -4,7 +4,7 @@ Feather publishes SDKs through **GitHub Releases** and **GitHub Packages** (free
 
 | SDK | Where it lives |
 |-----|----------------|
-| Node.js `@…/sdk` | [GitHub Packages](https://github.com/features/packages) (npm registry) |
+| Node.js `@arbtrage/feather` | [GitHub Packages](https://github.com/features/packages) (npm registry) |
 | Python `feather-sdk` | `.whl` + `.tar.gz` attached to each [GitHub Release](https://docs.github.com/en/repositories/releasing-projects-on-github) |
 
 GitHub Packages does not host a pip registry, so the Python wheel is uploaded as a release asset instead.
@@ -21,14 +21,14 @@ The workflow will:
 1. Sync version to `packages/sdk-node/package.json` and `packages/sdk-python/pyproject.toml`
 2. Bundle protos, embedded UI static assets, and Python gRPC stubs
 3. Run validation (build + contract tests + `twine check`)
-4. Publish `@OWNER/sdk` to GitHub Packages (`OWNER` = your GitHub org/user, lowercased)
+4. Publish `@arbtrage/feather` to GitHub Packages
 5. Create a GitHub Release tagged `v0.1.0` with Python wheel/sdist attached
 
 No extra secrets are needed — the workflow uses the built-in `GITHUB_TOKEN`.
 
 ### npm scope note
 
-GitHub Packages requires the npm scope to match your GitHub org/username. For repo `Arbtrage/Feather`, the published package is **`@arbtrage/sdk`** (derived from the GitHub owner name). The workflow sets this automatically at publish time.
+GitHub Packages requires the npm scope to match your GitHub org/username. For repo `Arbtrage/Feather`, the published package is **`@arbtrage/feather`** (derived from the GitHub owner name). The workflow sets this automatically at publish time.
 
 ## Manual dry-run (local)
 
@@ -47,7 +47,7 @@ Actions → **Release** → **Run workflow** → enable **dry_run** (build + val
 Public packages can be installed without authentication:
 
 ```bash
-npm install @arbtrage/sdk@0.1.0
+npm install @arbtrage/feather@0.1.0
 ```
 
 If npm cannot resolve the scope, add a project `.npmrc`:
@@ -80,7 +80,7 @@ The npm scope must match your GitHub owner (`Arbtrage` → `@arbtrage`). The rel
 
 ### Python wheel missing UI assets
 
-Confirm `scripts/bundle-ui.sh` ran — the wheel should include `feather/ui_static/`:
+Confirm `scripts/bundle-ui.sh` ran — the wheel should include `arbtrage/feather/ui_static/`:
 
 ```bash
 ./scripts/release-dry-run.sh 0.1.0

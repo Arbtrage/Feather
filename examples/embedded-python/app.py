@@ -4,7 +4,7 @@
 import asyncio
 import json
 
-from feather import FeatherApp
+from arbtrage.feather import FeatherApp
 
 app = FeatherApp()
 

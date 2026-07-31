@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build @arbitrage/ui and copy static assets into SDK packages.
+# Build @arbtrage/ui and copy static assets into SDK packages.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 UI="$ROOT/packages/ui"
 NODE_DST="$ROOT/packages/sdk-node/ui-static"
-PY_DST="$ROOT/packages/sdk-python/feather/ui_static"
+PY_DST="$ROOT/packages/sdk-python/arbtrage/feather/ui_static"
 
 cd "$UI"
 npm install

@@ -4,14 +4,14 @@ Enable Feather's read-only monitoring UI from the SDK — no separate dashboard 
 
 ## Overview
 
-When `ui.enabled` is set, the SDK serves a local web UI (queue stats, jobs list, job detail) from static assets bundled in `@arbitrage/sdk` / `feather-sdk`. The UI reads from your **feather-server admin HTTP API** (default `http://localhost:8080`).
+When `ui.enabled` is set, the SDK serves a local web UI (queue stats, jobs list, job detail) from static assets bundled in `@arbtrage/feather` / `feather-sdk`. The UI reads from your **feather-server admin HTTP API** (default `http://localhost:8080`).
 
 You still run feather-server + Redis yourself. The UI runs inside your application process, similar to embedded workers.
 
 ## Node.js
 
 ```javascript
-import { FeatherApp } from "@arbitrage/sdk";
+import { FeatherApp } from "@arbtrage/feather";
 
 const app = new FeatherApp({
   address: "localhost:50051",
@@ -44,7 +44,7 @@ await app.startEmbedded({ ui: true });
 ## Python
 
 ```python
-from feather import FeatherApp
+from arbtrage.feather import FeatherApp
 
 app = FeatherApp(
     address="localhost:50051",

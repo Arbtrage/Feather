@@ -40,7 +40,7 @@ feather/
 │   ├── proto/            feather.v1 protobuf definitions
 │   ├── server/           Rust feather-server
 │   ├── ui/               Monitoring SPA (bundled into SDKs)
-│   ├── sdk-node/         @arbtrage/sdk (GitHub Packages)
+│   ├── sdk-node/         @arbtrage/feather (GitHub Packages)
 │   └── sdk-python/       feather-sdk (GitHub Release)
 ├── docs/                 Documentation markdown source
 ├── examples/             Node & Python workers

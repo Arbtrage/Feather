@@ -40,7 +40,7 @@ When adding user-facing features, update `docs/` and the relevant `meta.json`.
 
 ## Release SDKs
 
-Actions → **Release** → **Run workflow** with a semver (e.g. `0.1.0`). CI creates the GitHub Release, publishes `@OWNER/sdk` to GitHub Packages, and attaches the Python wheel to the release.
+Actions → **Release** → **Run workflow** with a semver (e.g. `0.1.0`). CI creates the GitHub Release, publishes `@arbtrage/feather` to GitHub Packages, and attaches the Python wheel to the release.
 
 No external registry secrets required. See [docs/operations/publishing.md](docs/operations/publishing.md).
 
@@ -53,7 +53,7 @@ Local dry-run: `./scripts/release-dry-run.sh 0.1.0`
 | `packages/proto/` | Protobuf definitions |
 | `packages/server/` | Rust server crate |
 | `packages/ui/` | Monitoring SPA (bundled into SDKs) |
-| `packages/sdk-node/` | Node.js SDK (`@arbitrage/sdk`) |
+| `packages/sdk-node/` | Node.js SDK (`@arbtrage/feather`) |
 | `packages/sdk-python/` | Python SDK |
 | `apps/docs/` | Fumadocs site (Vercel) |
 | `apps/dashboard/` | Optional standalone dashboard (Docker) |

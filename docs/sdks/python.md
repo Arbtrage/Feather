@@ -15,7 +15,7 @@ Replace `v0.1.0` with the release tag you need.
 ## Celery-style embedded mode (recommended)
 
 ```python
-from feather import FeatherApp
+from arbtrage.feather import FeatherApp
 
 app = FeatherApp()
 
@@ -32,7 +32,7 @@ See [Embedded mode](embedded.md).
 ## FeatherClient (enqueue only)
 
 ```python
-from feather import FeatherClient
+from arbtrage.feather import FeatherClient
 
 client = FeatherClient()  # uses FEATHER_ADDRESS env var
 
@@ -60,7 +60,7 @@ Async worker with the same surface area as the Node SDK:
 ```python
 import asyncio
 import json
-from feather import Worker
+from arbtrage.feather import Worker
 
 async def echo(ctx):
     data = json.loads(ctx.payload.decode())

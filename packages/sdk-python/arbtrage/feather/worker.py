@@ -11,7 +11,7 @@ from typing import Any
 
 import grpc
 
-from feather.client import _import_queue_stubs
+from .client import _import_queue_stubs
 
 Handler = Callable[["JobContext"], Awaitable[None]]
 

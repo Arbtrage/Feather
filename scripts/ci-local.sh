@@ -37,7 +37,7 @@ chmod +x scripts/bundle-protos.sh
 ./scripts/bundle-protos.sh
 ./scripts/bundle-ui.sh
 pip install ./packages/sdk-python
-python -c "from feather import FeatherApp, FeatherClient, Worker"
+python -c "from arbtrage.feather import FeatherApp, FeatherClient, Worker"
 
 echo "=== docs site ==="
 cd apps/docs && npm install && npm run build

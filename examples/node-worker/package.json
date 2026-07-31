@@ -8,6 +8,6 @@
     "enqueue": "node enqueue.js"
   },
   "dependencies": {
-    "@arbitrage/sdk": "file:../../packages/sdk-node"
+    "@arbtrage/feather": "file:../../packages/sdk-node"
   }
 }

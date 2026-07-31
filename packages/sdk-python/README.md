@@ -16,7 +16,7 @@ Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`)
 
 ```python
 import asyncio
-from feather import FeatherApp
+from arbtrage.feather import FeatherApp
 
 app = FeatherApp()
 
@@ -39,7 +39,7 @@ asyncio.run(main())
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from feather import FeatherApp
+from arbtrage.feather import FeatherApp
 
 feather = FeatherApp()
 

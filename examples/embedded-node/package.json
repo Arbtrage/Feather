@@ -7,7 +7,7 @@
     "start": "node server.mjs"
   },
   "dependencies": {
-    "@arbitrage/sdk": "file:../../packages/sdk-node",
+    "@arbtrage/feather": "file:../../packages/sdk-node",
     "express": "^4.21.2"
   }
 }

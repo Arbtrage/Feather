@@ -26,7 +26,7 @@ const p = '$NODE_PKG';
 const j = JSON.parse(fs.readFileSync(p, 'utf8'));
 j.version = '$VERSION';
 fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
-console.log('@arbitrage/sdk ->', '$VERSION');
+console.log('@arbtrage/feather ->', '$VERSION');
 "
 
 python3 - <<PY
