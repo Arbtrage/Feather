@@ -17,29 +17,37 @@ if ! node -v | grep -qE '^v20\.'; then
 fi
 
 ensure_python_tools() {
-  if python3 -m pip install "$@" 2>/dev/null; then
-    return 0
+  if [[ -x "$ROOT/.venv/bin/python" ]]; then
+    PY="$ROOT/.venv/bin/python"
+  elif [[ -x "$ROOT/.venv/bin/python3.12" ]]; then
+    PY="$ROOT/.venv/bin/python3.12"
+  else
+    VENV="$ROOT/.venv-release-dry-run"
+    if [[ ! -x "$VENV/bin/python" ]]; then
+      rm -rf "$VENV"
+      (python3.12 -m venv "$VENV" 2>/dev/null || python3 -m venv "$VENV")
+    fi
+    PY="$VENV/bin/python"
   fi
-  VENV="$ROOT/.venv-release-dry-run"
-  if [[ ! -d "$VENV" ]]; then
-    python3 -m venv "$VENV"
-  fi
-  # shellcheck disable=SC1091
-  source "$VENV/bin/activate"
-  pip install "$@"
+  "$PY" -m pip install "$@"
 }
 
-chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
+chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
 ./scripts/sync-version.sh "$VERSION"
-ensure_python_tools grpcio-tools build hatchling
+ensure_python_tools grpcio-tools "build>=1.2" "hatchling>=1.27.0"
 ./scripts/bundle-protos.sh
+./scripts/bundle-ui.sh
 npm ci
 npm run build -w @feather/sdk
+test -d packages/sdk-node/ui-static/assets
 
-ensure_python_tools build hatchling grpcio-tools
+ensure_python_tools "build>=1.2" "hatchling>=1.27.0" grpcio-tools "twine>=6.1.0"
 ./scripts/bundle-protos.sh
+./scripts/bundle-ui.sh
+test -d packages/sdk-python/feather/ui_static/assets
 cd "$ROOT/packages/sdk-python"
-python3 -m build
+"$PY" -m build
+"$PY" -m twine check dist/*
 cd "$ROOT"
 
 node --test tests/contract/node_contract.test.mjs

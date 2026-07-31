@@ -45,6 +45,17 @@ Feather is **not** an in-memory queue. You still run:
 
 You do **not** need a separate worker **container** unless you choose dedicated mode for scale.
 
+## Optional monitoring UI
+
+Enable the bundled UI from SDK config — no separate dashboard service:
+
+```javascript
+const app = new FeatherApp({ ui: { enabled: true, port: 3001 } });
+await app.startEmbedded();
+```
+
+See [Embedded monitoring UI](ui.md).
+
 ## Node.js
 
 ```javascript

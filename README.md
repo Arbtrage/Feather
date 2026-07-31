@@ -7,40 +7,42 @@ Phase 1 delivers reliable **enqueue → lease → execute → ack** job processi
 ## Quickstart
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+docker compose -f docker/docker-compose.yml up --build redis feather-server
 ```
 
 ```bash
-cd examples/node-worker && npm install
-FEATHER_ADDRESS=localhost:50051 npm start    # worker
-npm run enqueue                               # enqueue jobs
+cd examples/embedded-node && npm install
+FEATHER_ADDRESS=localhost:50051 npm start
 ```
 
-Open the dashboard at [http://localhost:3000](http://localhost:3000).
+Embedded mode starts a worker and optional monitoring UI (`http://127.0.0.1:3001` when `ui.enabled`).
 
 ## Documentation
 
-Full documentation lives in [`docs/`](docs/):
+Public docs site: **https://docs.feather.dev** (Fumadocs on Vercel)
+
+Source markdown in [`docs/`](docs/):
 
 - [Quickstart](docs/getting-started/quickstart.md)
-- [Concepts](docs/concepts/jobs-and-queues.md)
+- [Embedded mode](docs/sdks/embedded.md) · [Embedded UI](docs/sdks/ui.md)
 - [Node.js SDK](docs/sdks/node.md) · [Python SDK](docs/sdks/python.md)
 - [Configuration](docs/reference/configuration.md)
 - [Roadmap](docs/roadmap.md)
-
-Compatible with [GitBook Git Sync](https://gitbook.com/docs/getting-started/git-sync) via [`.gitbook.yaml`](.gitbook.yaml).
+- [Vercel deploy guide](docs/operations/vercel.md)
 
 ## Repository layout
 
 ```
 feather/
-├── apps/dashboard/       Next.js read-only UI
+├── apps/docs/            Fumadocs site (deploy to Vercel)
+├── apps/dashboard/       Optional standalone Next.js UI (Docker)
 ├── packages/
 │   ├── proto/            feather.v1 protobuf definitions
 │   ├── server/           Rust feather-server
+│   ├── ui/               Monitoring SPA (bundled into SDKs)
 │   ├── sdk-node/         @feather/sdk
 │   └── sdk-python/       feather-sdk
-├── docs/                 Public documentation (GitBook)
+├── docs/                 Documentation markdown source
 ├── examples/             Node & Python workers
 ├── docker/               Compose & Dockerfiles
 └── tests/                Integration & contract tests
@@ -51,16 +53,10 @@ Internal design specs live locally in `docs-local/` (gitignored).
 ## Development
 
 ```bash
-# Server (requires Redis)
-cargo run --manifest-path packages/server/Cargo.toml
+./scripts/ci-local.sh
 
-# SDKs
-cd packages/sdk-node && npm install && npm run build
-pip install ./packages/sdk-python
-
-# Tests
-FEATHER_INTEGRATION=1 cargo test --manifest-path packages/server/Cargo.toml
-node --test tests/contract/node_contract.test.mjs
+# Docs site locally
+cd apps/docs && npm install && npm run dev
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details.

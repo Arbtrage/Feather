@@ -40,6 +40,8 @@ jobs:
           node-version: "20"
       - name: build sdk
         run: |
+          chmod +x scripts/bundle-ui.sh
+          ./scripts/bundle-ui.sh
           cd packages/sdk-node && npm install && npm run build
       - name: contract tests
         run: node --test tests/contract/node_contract.test.mjs
@@ -54,8 +56,9 @@ jobs:
       - name: install sdk
         run: |
           pip install grpcio-tools
-          chmod +x scripts/bundle-protos.sh
+          chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh
           ./scripts/bundle-protos.sh
+          ./scripts/bundle-ui.sh
           pip install ./packages/sdk-python
       - name: import check
         run: python -c "from feather import FeatherApp, FeatherClient, Worker"
@@ -69,3 +72,25 @@ jobs:
           node-version: "20"
       - name: build dashboard
         run: cd apps/dashboard && npm install && npm run build
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: build docs
+        run: cd apps/docs && npm install && npm run build
+
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: build ui and bundle into sdks
+        run: |
+          chmod +x scripts/bundle-ui.sh
+          ./scripts/bundle-ui.sh

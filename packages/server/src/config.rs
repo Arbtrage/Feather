@@ -17,6 +17,8 @@ pub struct AppConfig {
     pub offline_threshold_ms: u64,
     #[serde(default = "default_max_renewals")]
     pub max_lease_renewals: u32,
+    #[serde(default = "default_cors_origins")]
+    pub cors_origins: Vec<String>,
     pub server: ServerConfig,
     pub storage: StorageConfig,
     #[serde(default)]
@@ -64,6 +66,12 @@ fn default_offline_threshold() -> u64 {
 fn default_max_renewals() -> u32 {
     100
 }
+fn default_cors_origins() -> Vec<String> {
+    vec![
+        "http://localhost:3000".into(),
+        "http://localhost:3001".into(),
+    ]
+}
 fn default_log_level() -> String {
     "info".into()
 }
@@ -86,6 +94,7 @@ impl AppConfig {
                 heartbeat_interval_ms: default_heartbeat_interval(),
                 offline_threshold_ms: default_offline_threshold(),
                 max_lease_renewals: default_max_renewals(),
+                cors_origins: default_cors_origins(),
                 server: ServerConfig {
                     grpc_addr: "0.0.0.0:50051".into(),
                     http_addr: "0.0.0.0:8080".into(),
@@ -115,6 +124,13 @@ impl AppConfig {
         }
         if let Ok(v) = std::env::var("FEATHER_LOG") {
             cfg.observability.log_level = v;
+        }
+        if let Ok(v) = std::env::var("FEATHER_CORS_ORIGINS") {
+            cfg.cors_origins = v
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
         }
 
         Ok(cfg)

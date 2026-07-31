@@ -60,20 +60,24 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Bundle protos and build Node SDK
+      - name: Bundle protos, UI, and build Node SDK
         run: |
-          chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
+          chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
           pip install grpcio-tools
           ./scripts/bundle-protos.sh
+          ./scripts/bundle-ui.sh
           npm ci
           npm run build -w @feather/sdk
 
       - name: Build Python SDK
         run: |
-          pip install build hatchling grpcio-tools
+          pip install "build>=1.2" "hatchling>=1.27.0" grpcio-tools
           ./scripts/bundle-protos.sh
+          ./scripts/bundle-ui.sh
           cd packages/sdk-python && python -m build
+          python -m pip install "twine>=6.1.0"
+          python -m twine check dist/*
 
       - name: Contract tests
         run: node --test tests/contract/node_contract.test.mjs
@@ -95,11 +99,14 @@ jobs:
 
       - name: Prepare release artifacts
         run: |
-          chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
+          chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
           ./scripts/bundle-protos.sh
+          ./scripts/bundle-ui.sh
           npm ci
           npm run build -w @feather/sdk
+          test -d packages/sdk-node/ui-static/assets
+          npm pkg fix --prefix packages/sdk-node
 
       - name: Publish @feather/sdk to npm
         working-directory: packages/sdk-node
@@ -121,17 +128,21 @@ jobs:
 
       - name: Prepare release artifacts
         run: |
-          chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
-          pip install grpcio-tools build hatchling
+          chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
+          pip install grpcio-tools "build>=1.2" "hatchling>=1.27.0"
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
           ./scripts/bundle-protos.sh
+          ./scripts/bundle-ui.sh
+          test -d packages/sdk-python/feather/ui_static/assets
           cd packages/sdk-python && python -m build
+          python -m pip install "twine>=6.1.0"
+          python -m twine check dist/*
 
       - name: Publish feather-sdk to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: python -m pip install twine && python -m twine upload packages/sdk-python/dist/*
+        run: python -m twine upload --verbose packages/sdk-python/dist/*
 
   release-summary:
     needs: [resolve-version, validate, publish-npm, publish-pypi]

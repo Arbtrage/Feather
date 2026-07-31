@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Feather durable execution platform — Python SDK"
 readme = "README.md"
 requires-python = ">=3.11"
-license = "MIT"
+license = { text = "MIT" }
 dependencies = [
     "grpcio>=1.62",
     "grpcio-tools>=1.62",
@@ -12,15 +12,21 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/your-org/feather"
-Documentation = "https://github.com/your-org/feather/tree/main/docs"
+Repository = "https://github.com/Arbtrage/Feather"
+Documentation = "https://docs.feather.dev"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["feather"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"feather/ui_static" = "feather/ui_static"
+
 [tool.hatch.build.targets.sdist]
-include = ["feather/**/*.py", "feather/proto/**/*.proto"]
+include = ["feather/**/*.py", "feather/proto/**/*.proto", "feather/ui_static/**/*"]
+
+[tool.hatch.build.targets.sdist.force-include]
+"feather/ui_static" = "feather/ui_static"

@@ -1,6 +1,6 @@
 # @feather/sdk
 
-Node.js SDK for [Feather](https://github.com/your-org/feather) — enqueue tasks and run workers in-process (Celery-style) or as dedicated processes.
+Node.js SDK for [Feather](https://github.com/Arbtrage/Feather) — enqueue tasks, run embedded workers, and optionally serve the monitoring UI.
 
 ## Install
 
@@ -12,42 +12,38 @@ Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`)
 
 ## Celery-style (embedded — recommended)
 
-Run tasks in the same process as your app — no separate worker deployment:
-
 ```javascript
 import { FeatherApp } from "@feather/sdk";
 
-const app = new FeatherApp();
+const app = new FeatherApp({
+  ui: { enabled: true, port: 3001 },
+});
 
 app.task("send-email", async (ctx) => {
   const { to } = JSON.parse(ctx.payload.toString());
   await sendEmail(to);
 });
 
-// Start background polling (non-blocking)
-await app.startEmbedded();
-
-// Enqueue from your API
+await app.startEmbedded(); // worker + UI at http://127.0.0.1:3001
 await app.delay("send-email", { to: "user@example.com" });
 ```
 
 ## Dedicated worker (optional)
-
-For high throughput, run a separate worker process:
 
 ```javascript
 import { Worker } from "@feather/sdk";
 
 const worker = new Worker({ queues: ["default"] });
 worker.task("send-email", handler);
-await worker.start(); // blocks
+await worker.start();
 ```
 
 ## Publish
 
-From monorepo root:
-
 ```bash
 ./scripts/bundle-protos.sh
+./scripts/bundle-ui.sh
 cd packages/sdk-node && npm publish --access public
 ```
+
+Docs: https://docs.feather.dev

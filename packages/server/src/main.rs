@@ -44,12 +44,13 @@ async fn main() -> anyhow::Result<()> {
     let admin_state = AdminState {
         store: store.clone(),
     };
+    let cors_origins = config.cors_origins.clone();
     let lease_ms = config.default_lease_duration_ms;
 
     let grpc = tokio::spawn(async move {
         serve_grpc(grpc_addr, queue_service, worker_service, lease_ms).await
     });
-    let http = tokio::spawn(async move { serve_http(http_addr, admin_state).await });
+    let http = tokio::spawn(async move { serve_http(http_addr, admin_state, &cors_origins).await });
 
     tokio::select! {
         r = grpc => r??,

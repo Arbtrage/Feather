@@ -11,11 +11,29 @@ Add these secrets in GitHub → Settings → Secrets and variables → Actions:
 | `NPM_TOKEN` | npm automation token with publish access to `@feather` scope |
 | `PYPI_API_TOKEN` | PyPI API token for `feather-sdk` |
 
+### npm organization (required for first publish)
+
+The Node package is scoped as **`@feather/sdk`**. npm returns `404 Not Found` on first publish if the **`@feather` organization does not exist** or your token cannot publish to that scope.
+
+1. Sign in at [npmjs.com](https://www.npmjs.com)
+2. Create an organization named **`feather`** (free plan is fine)
+3. Confirm you are an owner of `@feather`
+
+Alternatively, rename the package to a scope you already own (for example `@your-npm-user/sdk`) before releasing.
+
 ### npm token
 
 1. [npmjs.com](https://www.npmjs.com) → Access Tokens → Generate **Granular Access Token**
-2. Packages: read/write for `@feather/sdk`
-3. Add as repository secret `NPM_TOKEN`
+2. Organizations: read/write for **`feather`**
+3. Packages: read/write for `@feather/sdk` (or all packages in the org)
+4. Add as repository secret `NPM_TOKEN`
+
+Verify locally (optional):
+
+```bash
+npm whoami
+npm access ls-packages @feather
+```
 
 ### PyPI token
 
@@ -35,9 +53,23 @@ Optional: configure a GitHub **environment** named `pypi` with required reviewer
 The [Release workflow](../.github/workflows/release.yml) will:
 
 1. Sync version to `packages/sdk-node/package.json` and `packages/sdk-python/pyproject.toml`
-2. Bundle protos and generate Python gRPC stubs
-3. Run validation (build + contract tests)
+2. Bundle protos, embedded UI static assets, and Python gRPC stubs
+3. Run validation (build + contract tests + `twine check`)
 4. Publish to npm and PyPI
+
+## Troubleshooting
+
+### npm: `404 Not Found` on `@feather/sdk`
+
+- Create the **`@feather` npm organization** (see above)
+- Regenerate `NPM_TOKEN` with org publish permissions
+- Re-run the release workflow
+
+### PyPI: `400 Bad Request`
+
+- Ensure the workflow builds with `hatchling>=1.27.0` and uploads with `twine>=6.1.0` (license metadata must match Metadata-Version 2.4)
+- Confirm `scripts/bundle-ui.sh` ran — the wheel should include `feather/ui_static/`
+- Run locally: `./scripts/release-dry-run.sh 0.1.0` then inspect `packages/sdk-python/dist/*.whl`
 
 ## Manual dry-run (local)
 

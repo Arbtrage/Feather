@@ -80,6 +80,23 @@ pub fn router(state: AdminState) -> Router {
         .with_state(state)
 }
 
+pub fn router_with_cors(state: AdminState, cors_origins: &[String]) -> Router {
+    use axum::http::{HeaderValue, Method};
+    use tower_http::cors::{AllowOrigin, Any, CorsLayer};
+
+    let allowed: Vec<HeaderValue> = cors_origins
+        .iter()
+        .filter_map(|o| HeaderValue::from_str(o).ok())
+        .collect();
+
+    let cors = CorsLayer::new()
+        .allow_origin(AllowOrigin::list(allowed))
+        .allow_methods([Method::GET, Method::OPTIONS])
+        .allow_headers(Any);
+
+    router(state).layer(cors)
+}
+
 async fn health() -> Json<HealthResponse> {
     Json(HealthResponse { status: "ok" })
 }
@@ -166,8 +183,12 @@ async fn get_job(
     Ok(Json(serde_json::json!({ "data": job_json(&job) })))
 }
 
-pub async fn serve_http(addr: std::net::SocketAddr, state: AdminState) -> anyhow::Result<()> {
-    let app = router(state);
+pub async fn serve_http(
+    addr: std::net::SocketAddr,
+    state: AdminState,
+    cors_origins: &[String],
+) -> anyhow::Result<()> {
+    let app = router_with_cors(state, cors_origins);
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
     Ok(())

@@ -29,6 +29,7 @@ services:
         condition: service_healthy
 
   dashboard:
+    profiles: ["dashboard"]
     build:
       context: ..
       dockerfile: docker/Dockerfile.dashboard

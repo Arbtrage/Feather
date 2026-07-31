@@ -20,6 +20,12 @@ else
   cargo test --manifest-path packages/server/Cargo.toml --no-run
 fi
 
+echo "=== ui package ==="
+cd packages/ui && npm install && npm run build
+cd "$ROOT"
+chmod +x scripts/bundle-ui.sh
+./scripts/bundle-ui.sh
+
 echo "=== node sdk ==="
 cd packages/sdk-node && npm install && npm run build
 cd "$ROOT"
@@ -29,10 +35,15 @@ echo "=== python sdk ==="
 pip install grpcio-tools
 chmod +x scripts/bundle-protos.sh
 ./scripts/bundle-protos.sh
+./scripts/bundle-ui.sh
 pip install ./packages/sdk-python
 python -c "from feather import FeatherApp, FeatherClient, Worker"
 
-echo "=== dashboard ==="
+echo "=== docs site ==="
+cd apps/docs && npm install && npm run build
+cd "$ROOT"
+
+echo "=== dashboard (optional standalone) ==="
 cd apps/dashboard && npm install && npm run build
 
 echo ""

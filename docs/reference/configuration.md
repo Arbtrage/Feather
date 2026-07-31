@@ -38,6 +38,8 @@ log_format = "json"
 | `FEATHER_NAMESPACE` | `default` | Redis key prefix namespace |
 | `FEATHER_LEASE_MS` | `30000` | Default lease duration (ms) |
 | `FEATHER_LOG` | `info` | Log level (`debug`, `info`, `warn`, `error`) |
+| `FEATHER_CORS_ORIGINS` | `http://localhost:3000,http://localhost:3001` | Comma-separated browser origins for admin API CORS |
+| `FEATHER_ADMIN_URL` | `http://localhost:8080` | Admin API URL (SDK embedded UI) |
 | `FEATHER_ADDRESS` | `localhost:50051` | SDK server target (client-side) |
 
 ## Server settings

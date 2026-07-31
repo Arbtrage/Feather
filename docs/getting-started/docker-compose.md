@@ -17,12 +17,20 @@ The local development stack is defined in `docker/docker-compose.yml`.
 - Depends on: Redis (health check)
 - Built from: `docker/Dockerfile.server`
 
-### dashboard
+### dashboard (optional)
 
 - Port: `3000`
+- Profile: `dashboard` (not started by default)
 - Depends on: feather-server
 - Built from: `docker/Dockerfile.dashboard`
-- Env: `FEATHER_API_URL=http://feather-server:8080`
+
+Enable with:
+
+```bash
+docker compose -f docker/docker-compose.yml --profile dashboard up --build
+```
+
+For most apps, use [SDK embedded UI](../sdks/ui.md) instead of this container.
 
 ## Commands
 

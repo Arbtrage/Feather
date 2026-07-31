@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "proto"
+    "proto",
+    "ui-static"
   ],
   "exports": {
     ".": {
@@ -17,7 +18,8 @@
   },
   "scripts": {
     "bundle-proto": "bash ../../scripts/bundle-protos.sh",
-    "prebuild": "npm run bundle-proto",
+    "bundle-ui": "bash ../../scripts/bundle-ui.sh",
+    "prebuild": "npm run bundle-proto && npm run bundle-ui",
     "build": "tsc",
     "prepublishOnly": "npm run build",
     "test": "node --test dist/**/*.test.js"
@@ -38,7 +40,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/feather.git",
+    "url": "https://github.com/Arbtrage/Feather.git",
     "directory": "packages/sdk-node"
   },
   "license": "MIT"
