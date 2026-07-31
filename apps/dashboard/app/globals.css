@@ -1,0 +1,45 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --bg: #0f1419;
+  --panel: #1a2332;
+  --text: #e7ecf3;
+  --muted: #8b98a8;
+  --accent: #3b82f6;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+a {
+  color: var(--accent);
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid #2a3544;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-pending { background: #334155; color: #cbd5e1; }
+.badge-leased { background: #1e3a5f; color: #93c5fd; }
+.badge-completed { background: #14532d; color: #86efac; }
+.badge-failed { background: #7f1d1d; color: #fca5a5; }

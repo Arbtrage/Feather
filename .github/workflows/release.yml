@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver to publish (e.g. 0.1.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Build only — do not publish to registries"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  resolve-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      dry_run: ${{ steps.version.outputs.dry_run }}
+    steps:
+      - id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            TAG="${{ github.event.release.tag_name }}"
+            VERSION="${TAG#v}"
+            DRY="false"
+          else
+            VERSION="${{ inputs.version }}"
+            TAG="v${VERSION}"
+            DRY="${{ inputs.dry_run }}"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "invalid semver: $VERSION" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$DRY" >> "$GITHUB_OUTPUT"
+          echo "Publishing version $VERSION (tag $TAG, dry_run=$DRY)"
+
+  validate:
+    needs: resolve-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bundle protos and build Node SDK
+        run: |
+          chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
+          ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
+          pip install grpcio-tools
+          ./scripts/bundle-protos.sh
+          cd packages/sdk-node && npm ci && npm run build
+
+      - name: Build Python SDK
+        run: |
+          pip install build hatchling grpcio-tools
+          ./scripts/bundle-protos.sh
+          cd packages/sdk-python && python -m build
+
+      - name: Contract tests
+        run: node --test tests/contract/node_contract.test.mjs
+
+  publish-npm:
+    needs: [resolve-version, validate]
+    if: needs.resolve-version.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: https://registry.npmjs.org
+
+      - name: Prepare release artifacts
+        run: |
+          chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
+          ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
+          ./scripts/bundle-protos.sh
+          cd packages/sdk-node && npm ci && npm run build
+
+      - name: Publish @feather/sdk to npm
+        working-directory: packages/sdk-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
+
+  publish-pypi:
+    needs: [resolve-version, validate]
+    if: needs.resolve-version.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prepare release artifacts
+        run: |
+          chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
+          pip install grpcio-tools build hatchling
+          ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
+          ./scripts/bundle-protos.sh
+          cd packages/sdk-python && python -m build
+
+      - name: Publish feather-sdk to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python -m pip install twine && python -m twine upload packages/sdk-python/dist/*
+
+  release-summary:
+    needs: [resolve-version, validate, publish-npm, publish-pypi]
+    if: always() && needs.resolve-version.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summary
+        run: |
+          echo "## Release ${{ needs.resolve-version.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Package | Registry | Version | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|----------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| @feather/sdk | npm | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-npm.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| feather-sdk | PyPI | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-pypi.result }} |" >> "$GITHUB_STEP_SUMMARY"

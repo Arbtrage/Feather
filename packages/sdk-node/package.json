@@ -1,0 +1,45 @@
+{
+  "name": "@feather/sdk",
+  "version": "0.1.0",
+  "description": "Feather durable execution platform — Node.js SDK",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "proto"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "bundle-proto": "bash ../../scripts/bundle-protos.sh",
+    "prebuild": "npm run bundle-proto",
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.6",
+    "@grpc/proto-loader": "^0.7.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/feather.git",
+    "directory": "packages/sdk-node"
+  },
+  "license": "MIT"
+}

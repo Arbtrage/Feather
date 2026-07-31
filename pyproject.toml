@@ -1,0 +1,10 @@
+[project]
+name = "feather"
+version = "0.1.0"
+description = "Feather SDK and tooling — durable execution platform"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/sdk-python"]

@@ -1,0 +1,10 @@
+{
+  "name": "feather",
+  "private": true,
+  "workspaces": [
+    "packages/sdk-node",
+    "apps/dashboard",
+    "examples/node-worker",
+    "examples/embedded-node"
+  ]
+}

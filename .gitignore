@@ -1,0 +1,29 @@
+# Design docs (local only)
+docs-local/
+
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv
+
+# Rust
+target/
+
+# Node
+node_modules/
+.next/
+dist/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Env
+.env
+.env.local

@@ -1,0 +1,13 @@
+{
+  "name": "node-worker-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node worker.js",
+    "enqueue": "node enqueue.js"
+  },
+  "dependencies": {
+    "@feather/sdk": "file:../../packages/sdk-node"
+  }
+}

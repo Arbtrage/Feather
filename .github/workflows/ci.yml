@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: fmt
+        run: cargo fmt --check --manifest-path packages/server/Cargo.toml
+      - name: clippy
+        run: cargo clippy --manifest-path packages/server/Cargo.toml -- -D warnings
+      - name: test
+        env:
+          FEATHER_INTEGRATION: "1"
+          FEATHER_REDIS_URL: redis://127.0.0.1:6379
+        run: cargo test --manifest-path packages/server/Cargo.toml
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: build sdk
+        run: |
+          cd packages/sdk-node && npm install && npm run build
+      - name: contract tests
+        run: node --test tests/contract/node_contract.test.mjs
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install sdk
+        run: pip install ./packages/sdk-python
+      - name: import check
+        run: python -c "from feather import FeatherClient, Worker"
+
+  dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: build dashboard
+        run: cd apps/dashboard && npm install && npm run build

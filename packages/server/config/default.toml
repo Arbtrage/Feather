@@ -1,0 +1,19 @@
+default_lease_duration_ms = 30000
+max_payload_bytes = 262144
+lease_sweep_interval_ms = 1000
+recent_history_limit = 10000
+heartbeat_interval_ms = 10000
+offline_threshold_ms = 30000
+max_lease_renewals = 100
+
+[server]
+grpc_addr = "0.0.0.0:50051"
+http_addr = "0.0.0.0:8080"
+
+[storage]
+redis_url = "redis://127.0.0.1:6379"
+namespace = "default"
+
+[observability]
+log_level = "info"
+log_format = "json"

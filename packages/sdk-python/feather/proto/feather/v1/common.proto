@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package feather.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message ResourceProfile {
+  int32 cpu_cores = 1;
+  int64 memory_mb = 2;
+  int32 gpu_count = 3;
+  string gpu_model = 4;
+}
+
+message Failure {
+  string code = 1;
+  string message = 2;
+}
