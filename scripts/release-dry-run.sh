@@ -38,7 +38,7 @@ ensure_python_tools grpcio-tools "build>=1.2" "hatchling>=1.27.0"
 ./scripts/bundle-protos.sh
 ./scripts/bundle-ui.sh
 npm ci
-npm run build -w @arbtrage/sdk
+npm run build -w @arbitrage/sdk
 test -d packages/sdk-node/ui-static/assets
 
 ensure_python_tools "build>=1.2" "hatchling>=1.27.0" grpcio-tools "twine>=6.1.0"

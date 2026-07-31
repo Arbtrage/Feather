@@ -59,7 +59,7 @@ See [Embedded monitoring UI](ui.md).
 ## Node.js
 
 ```javascript
-import { FeatherApp } from "@arbtrage/sdk";
+import { FeatherApp } from "@arbitrage/sdk";
 
 const app = new FeatherApp();
 app.task("my-job", async (ctx) => { /* ... */ });

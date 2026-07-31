@@ -40,7 +40,7 @@ When adding user-facing features, update `docs/` and the relevant `meta.json`.
 
 ## Release SDKs
 
-Create a GitHub Release with tag `v0.1.0` → CI publishes `@arbtrage/sdk` and `arbtrage-feather-sdk`.
+Create a GitHub Release with tag `v0.1.0` → CI publishes `@arbitrage/sdk` and `arbitrage-feather-sdk`.
 
 Required secrets: `NPM_TOKEN`, `PYPI_API_TOKEN`. See [docs/operations/publishing.md](docs/operations/publishing.md).
 
@@ -53,7 +53,7 @@ Local dry-run: `./scripts/release-dry-run.sh 0.1.0`
 | `packages/proto/` | Protobuf definitions |
 | `packages/server/` | Rust server crate |
 | `packages/ui/` | Monitoring SPA (bundled into SDKs) |
-| `packages/sdk-node/` | Node.js SDK (`@arbtrage/sdk`) |
+| `packages/sdk-node/` | Node.js SDK (`@arbitrage/sdk`) |
 | `packages/sdk-python/` | Python SDK |
 | `apps/docs/` | Fumadocs site (Vercel) |
 | `apps/dashboard/` | Optional standalone dashboard (Docker) |

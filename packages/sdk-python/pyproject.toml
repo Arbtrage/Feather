@@ -1,5 +1,5 @@
 [project]
-name = "arbtrage-feather-sdk"
+name = "arbitrage-feather-sdk"
 version = "0.1.0"
 description = "Feather durable execution platform — Python SDK"
 readme = "README.md"

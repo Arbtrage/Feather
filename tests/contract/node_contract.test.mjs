@@ -8,7 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 test("sdk package exports FeatherClient and Worker", async () => {
   const pkg = path.join(root, "packages/sdk-node/package.json");
   const json = JSON.parse(await import("node:fs").then((fs) => fs.readFileSync(pkg, "utf8")));
-  assert.equal(json.name, "@arbtrage/sdk");
+  assert.equal(json.name, "@arbitrage/sdk");
 });
 
 test("proto files use feather.v1 package", async () => {

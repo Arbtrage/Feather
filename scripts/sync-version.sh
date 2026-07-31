@@ -26,7 +26,7 @@ const p = '$NODE_PKG';
 const j = JSON.parse(fs.readFileSync(p, 'utf8'));
 j.version = '$VERSION';
 fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
-console.log('@arbtrage/sdk ->', '$VERSION');
+console.log('@arbitrage/sdk ->', '$VERSION');
 "
 
 python3 - <<PY
@@ -40,7 +40,7 @@ text, n = re.subn(r'^version = ".*"$', f'version = "{version}"', text, count=1, 
 if n != 1:
     raise SystemExit("failed to update pyproject.toml version")
 path.write_text(text)
-print(f"arbtrage-feather-sdk -> {version}")
+print(f"arbitrage-feather-sdk -> {version}")
 PY
 
 echo "version sync complete: $VERSION"

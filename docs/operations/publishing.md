@@ -1,6 +1,6 @@
 # Publishing SDKs
 
-Feather publishes **@arbtrage/sdk** (npm) and **arbtrage-feather-sdk** (PyPI) automatically when you create a GitHub Release.
+Feather publishes **@arbitrage/sdk** (npm) and **arbitrage-feather-sdk** (PyPI) automatically when you create a GitHub Release.
 
 ## One-time setup
 
@@ -8,37 +8,37 @@ Add these secrets in GitHub → Settings → Secrets and variables → Actions:
 
 | Secret | Purpose |
 |--------|---------|
-| `NPM_TOKEN` | npm automation token with publish access to `@arbtrage` scope |
-| `PYPI_API_TOKEN` | PyPI API token for `arbtrage-feather-sdk` |
+| `NPM_TOKEN` | npm automation token with publish access to `@arbitrage` scope |
+| `PYPI_API_TOKEN` | PyPI API token for `arbitrage-feather-sdk` |
 
 ### npm organization (required for first publish)
 
-The Node package is scoped as **`@arbtrage/sdk`**. npm returns `404 Not Found` on first publish if the **`@arbtrage` organization does not exist** or your token cannot publish to that scope.
+The Node package is scoped as **`@arbitrage/sdk`**. npm returns `404 Not Found` on first publish if the **`@arbitrage` organization does not exist** or your token cannot publish to that scope.
 
 1. Sign in at [npmjs.com](https://www.npmjs.com)
-2. Create an organization named **`arbtrage`** (free plan is fine)
-3. Confirm you are an owner of `@arbtrage`
+2. Create an organization named **`arbitrage`** (free plan is fine)
+3. Confirm you are an owner of `@arbitrage`
 
 Alternatively, rename the package to a scope you already own (for example `@your-npm-user/sdk`) before releasing.
 
 ### npm token
 
 1. [npmjs.com](https://www.npmjs.com) → Access Tokens → Generate **Granular Access Token**
-2. Organizations: read/write for **`arbtrage`**
-3. Packages: read/write for `@arbtrage/sdk` (or all packages in the org)
+2. Organizations: read/write for **`arbitrage`**
+3. Packages: read/write for `@arbitrage/sdk` (or all packages in the org)
 4. Add as repository secret `NPM_TOKEN`
 
 Verify locally (optional):
 
 ```bash
 npm whoami
-npm access ls-packages @arbtrage
+npm access ls-packages @arbitrage
 ```
 
 ### PyPI token
 
 1. [pypi.org](https://pypi.org) → Account → API tokens → Add token
-2. Scope: entire account or project `arbtrage-feather-sdk`
+2. Scope: entire account or project `arbitrage-feather-sdk`
 3. Add as repository secret `PYPI_API_TOKEN`
 
 Optional: configure a GitHub **environment** named `pypi` with required reviewers for production publishes.
@@ -59,9 +59,9 @@ The [Release workflow](../.github/workflows/release.yml) will:
 
 ## Troubleshooting
 
-### npm: `404 Not Found` on `@arbtrage/sdk`
+### npm: `404 Not Found` on `@arbitrage/sdk`
 
-- Create the **`@arbtrage` npm organization** (see above)
+- Create the **`@arbitrage` npm organization** (see above)
 - Regenerate `NPM_TOKEN` with org publish permissions
 - Re-run the release workflow
 
@@ -87,6 +87,6 @@ Actions → **Release** → **Run workflow**
 ## Install published packages
 
 ```bash
-npm install @arbtrage/sdk@0.1.0
-pip install arbtrage-feather-sdk==0.1.0
+npm install @arbitrage/sdk@0.1.0
+pip install arbitrage-feather-sdk==0.1.0
 ```

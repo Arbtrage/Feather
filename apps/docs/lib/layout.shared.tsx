@@ -13,12 +13,12 @@ export function baseOptions(): BaseLayoutProps {
       },
       {
         text: "npm",
-        url: "https://www.npmjs.com/package/@arbtrage/sdk",
+        url: "https://www.npmjs.com/package/@arbitrage/sdk",
         external: true,
       },
       {
         text: "PyPI",
-        url: "https://pypi.org/project/arbtrage-feather-sdk/",
+        url: "https://pypi.org/project/arbitrage-feather-sdk/",
         external: true,
       },
     ],

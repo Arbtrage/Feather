@@ -1,13 +1,13 @@
 # Python SDK
 
-Package: `arbtrage-feather-sdk` on PyPI (monorepo: `packages/sdk-python/`)
+Package: `arbitrage-feather-sdk` on PyPI (monorepo: `packages/sdk-python/`)
 
 Requires Python 3.11+.
 
 ## Install
 
 ```bash
-pip install arbtrage-feather-sdk
+pip install arbitrage-feather-sdk
 ```
 
 ## Celery-style embedded mode (recommended)
