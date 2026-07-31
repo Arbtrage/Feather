@@ -2,7 +2,7 @@
 //! Run: FEATHER_INTEGRATION=1 cargo test --test enqueue_bench -- --ignored --nocapture
 
 use feather_server::domain::Job;
-use feather_server::storage::RedisStore;
+use feather_server::storage::{ActivityQueueStore, RedisStore};
 use std::sync::Arc;
 use std::time::Instant;
 

@@ -1,5 +1,5 @@
 use feather_server::domain::{Job, JobState};
-use feather_server::storage::RedisStore;
+use feather_server::storage::{ActivityQueueStore, RedisStore};
 use std::sync::Arc;
 
 fn redis_url() -> Option<String> {
@@ -90,9 +90,10 @@ async fn concurrent_dequeue_one_winner() {
 
     let s1 = store.clone();
     let s2 = store.clone();
+    let queues = vec!["default".to_string()];
     let (a, b) = tokio::join!(
-        s1.dequeue("w1", &["default".into()], 30_000),
-        s2.dequeue("w2", &["default".into()], 30_000),
+        s1.dequeue("w1", &queues, 30_000),
+        s2.dequeue("w2", &queues, 30_000),
     );
     let got = [a.unwrap(), b.unwrap()];
     let winners = got.iter().filter(|j| j.is_some()).count();

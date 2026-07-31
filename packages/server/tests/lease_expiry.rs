@@ -1,5 +1,5 @@
 use feather_server::domain::{Job, JobState};
-use feather_server::storage::RedisStore;
+use feather_server::storage::{ActivityQueueStore, RedisStore};
 use std::sync::Arc;
 use std::time::Duration;
 
