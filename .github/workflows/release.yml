@@ -66,7 +66,8 @@ jobs:
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
           pip install grpcio-tools
           ./scripts/bundle-protos.sh
-          cd packages/sdk-node && npm ci && npm run build
+          npm ci
+          npm run build -w @feather/sdk
 
       - name: Build Python SDK
         run: |
@@ -97,7 +98,8 @@ jobs:
           chmod +x scripts/bundle-protos.sh scripts/sync-version.sh
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
           ./scripts/bundle-protos.sh
-          cd packages/sdk-node && npm ci && npm run build
+          npm ci
+          npm run build -w @feather/sdk
 
       - name: Publish @feather/sdk to npm
         working-directory: packages/sdk-node
