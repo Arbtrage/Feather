@@ -1,14 +1,16 @@
 # Python SDK
 
-Package: `feather-sdk` on PyPI (monorepo: `packages/sdk-python/`)
+Package: `feather-sdk` — wheel attached to each [GitHub Release](https://github.com/Arbtrage/Feather/releases) (monorepo: `packages/sdk-python/`)
 
 Requires Python 3.11+.
 
 ## Install
 
 ```bash
-pip install feather-sdk
+pip install https://github.com/Arbtrage/Feather/releases/download/v0.1.0/feather_sdk-0.1.0-py3-none-any.whl
 ```
+
+Replace `v0.1.0` with the release tag you need.
 
 ## Celery-style embedded mode (recommended)
 

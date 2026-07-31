@@ -1,13 +1,19 @@
 # Node.js SDK
 
-Package: `@arbitrage/sdk` on npm (monorepo: `packages/sdk-node/`)
+Package: `@arbtrage/sdk` on [GitHub Packages](https://github.com/Arbtrage/Feather/pkgs/npm/sdk) (monorepo: `packages/sdk-node/`)
 
 Requires Node.js 20+.
 
 ## Install
 
 ```bash
-npm install @arbitrage/sdk
+npm install @arbtrage/sdk
+```
+
+If the scope is not resolved, add `.npmrc`:
+
+```ini
+@arbtrage:registry=https://npm.pkg.github.com
 ```
 
 From monorepo during development:

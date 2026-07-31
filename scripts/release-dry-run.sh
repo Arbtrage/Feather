@@ -54,4 +54,4 @@ node --test tests/contract/node_contract.test.mjs
 
 echo ""
 echo "Release validate passed for v$VERSION"
-echo "Re-run CI: gh workflow run release.yml -f version=$VERSION -f dry_run=true"
+echo "Re-run CI: gh workflow run release.yml -f version=$VERSION"

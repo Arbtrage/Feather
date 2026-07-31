@@ -1,11 +1,13 @@
-# @arbitrage/sdk
+# @arbtrage/sdk
 
 Node.js SDK for [Feather](https://github.com/Arbtrage/Feather) — enqueue tasks, run embedded workers, and optionally serve the monitoring UI.
 
 ## Install
 
+Published to [GitHub Packages](https://github.com/Arbtrage/Feather/pkgs/npm/sdk) (free for public repos):
+
 ```bash
-npm install @arbitrage/sdk
+npm install @arbtrage/sdk
 ```
 
 Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`).

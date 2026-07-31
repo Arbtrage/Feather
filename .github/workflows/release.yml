@@ -1,16 +1,14 @@
 name: Release
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: "Semver to publish (e.g. 0.1.0)"
+        description: "Semver to release (e.g. 0.1.0)"
         required: true
         type: string
       dry_run:
-        description: "Build only — do not publish to registries"
+        description: "Build only — do not tag, release, or publish"
         required: false
         type: boolean
         default: false
@@ -25,26 +23,24 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
       dry_run: ${{ steps.version.outputs.dry_run }}
+      npm_scope: ${{ steps.version.outputs.npm_scope }}
     steps:
       - id: version
         run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            TAG="${{ github.event.release.tag_name }}"
-            VERSION="${TAG#v}"
-            DRY="false"
-          else
-            VERSION="${{ inputs.version }}"
-            TAG="v${VERSION}"
-            DRY="${{ inputs.dry_run }}"
-          fi
+          VERSION="${{ inputs.version }}"
+          TAG="v${VERSION}"
+          DRY="${{ inputs.dry_run }}"
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
             echo "invalid semver: $VERSION" >&2
             exit 1
           fi
+          OWNER="${{ github.repository_owner }}"
+          NPM_SCOPE="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "dry_run=$DRY" >> "$GITHUB_OUTPUT"
-          echo "Publishing version $VERSION (tag $TAG, dry_run=$DRY)"
+          echo "npm_scope=$NPM_SCOPE" >> "$GITHUB_OUTPUT"
+          echo "Release $TAG (dry_run=$DRY, npm scope=@${NPM_SCOPE}/sdk)"
 
   validate:
     needs: resolve-version
@@ -68,7 +64,7 @@ jobs:
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
           npm ci
-          npm run build -w @arbtrage/sdk
+          npm run build -w @arbitrage/sdk
 
       - name: Build Python SDK
         run: |
@@ -82,78 +78,84 @@ jobs:
       - name: Contract tests
         run: node --test tests/contract/node_contract.test.mjs
 
-  publish-npm:
+  publish:
     needs: [resolve-version, validate]
     if: needs.resolve-version.outputs.dry_run != 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          registry-url: https://registry.npmjs.org
-
-      - name: Prepare release artifacts
-        run: |
-          chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
-          ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
-          ./scripts/bundle-protos.sh
-          ./scripts/bundle-ui.sh
-          npm ci
-          npm run build -w @arbtrage/sdk
-          test -d packages/sdk-node/ui-static/assets
-          npm pkg fix --prefix packages/sdk-node
-
-      - name: Publish @arbtrage/sdk to npm
-        working-directory: packages/sdk-node
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public --provenance
-
-  publish-pypi:
-    needs: [resolve-version, validate]
-    if: needs.resolve-version.outputs.dry_run != 'true'
-    runs-on: ubuntu-latest
-    environment: pypi
-    steps:
-      - uses: actions/checkout@v4
+          registry-url: https://npm.pkg.github.com
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Prepare release artifacts
+      - name: Build release artifacts
         run: |
           chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
-          pip install grpcio-tools "build>=1.2" "hatchling>=1.27.0"
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
+          pip install grpcio-tools "build>=1.2" "hatchling>=1.27.0"
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
-          test -d packages/sdk-python/feather/ui_static/assets
+          npm ci
+          npm run build -w @arbitrage/sdk
+          test -d packages/sdk-node/ui-static/assets
           cd packages/sdk-python && python -m build
           python -m pip install "twine>=6.1.0"
           python -m twine check dist/*
+          test -d feather/ui_static/assets
 
-      - name: Publish arbtrage-feather-sdk to PyPI
+      - name: Configure npm for GitHub Packages
+        working-directory: packages/sdk-node
+        run: |
+          SCOPE="${{ needs.resolve-version.outputs.npm_scope }}"
+          npm pkg set "name=@${SCOPE}/sdk"
+          npm pkg set "publishConfig.registry=https://npm.pkg.github.com"
+          npm pkg fix
+
+      - name: Publish @${{ needs.resolve-version.outputs.npm_scope }}/sdk to GitHub Packages
+        working-directory: packages/sdk-node
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: python -m twine upload --verbose packages/sdk-python/dist/*
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --access public
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.resolve-version.outputs.tag }}
+          name: ${{ needs.resolve-version.outputs.tag }}
+          generate_release_notes: true
+          files: packages/sdk-python/dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-summary:
-    needs: [resolve-version, validate, publish-npm, publish-pypi]
+    needs: [resolve-version, validate, publish]
     if: always() && needs.resolve-version.outputs.dry_run != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Summary
         run: |
-          echo "## Release ${{ needs.resolve-version.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          SCOPE="${{ needs.resolve-version.outputs.npm_scope }}"
+          TAG="${{ needs.resolve-version.outputs.tag }}"
+          VERSION="${{ needs.resolve-version.outputs.version }}"
+          REPO="${{ github.repository }}"
+          echo "## Release ${TAG}" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Package | Registry | Version | Status |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|---------|----------|---------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| @arbtrage/sdk | npm | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-npm.result }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| arbtrage-feather-sdk | PyPI | ${{ needs.resolve-version.outputs.version }} | ${{ needs.publish-pypi.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact | Location | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|----------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| @${SCOPE}/sdk | [GitHub Packages](https://github.com/${REPO}/pkgs/npm/sdk) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| feather-sdk wheel/sdist | [Release ${TAG}](https://github.com/${REPO}/releases/tag/${TAG}) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Install" >> "$GITHUB_STEP_SUMMARY"
+          echo '```bash' >> "$GITHUB_STEP_SUMMARY"
+          echo "npm install @${SCOPE}/sdk@${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "pip install https://github.com/${REPO}/releases/download/${TAG}/feather_sdk-${VERSION}-py3-none-any.whl" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
