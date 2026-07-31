@@ -1,6 +1,6 @@
 # Publishing SDKs
 
-Feather publishes **@arbitrage/sdk** (npm) and **arbitrage-feather-sdk** (PyPI) automatically when you create a GitHub Release.
+Feather publishes **@arbitrage/sdk** (npm) and **feather-sdk** (PyPI) automatically when you create a GitHub Release.
 
 ## One-time setup
 
@@ -9,7 +9,7 @@ Add these secrets in GitHub → Settings → Secrets and variables → Actions:
 | Secret | Purpose |
 |--------|---------|
 | `NPM_TOKEN` | npm automation token with publish access to `@arbitrage` scope |
-| `PYPI_API_TOKEN` | PyPI API token for `arbitrage-feather-sdk` |
+| `PYPI_API_TOKEN` | PyPI API token for `feather-sdk` |
 
 ### npm organization (required for first publish)
 
@@ -38,7 +38,7 @@ npm access ls-packages @arbitrage
 ### PyPI token
 
 1. [pypi.org](https://pypi.org) → Account → API tokens → Add token
-2. Scope: entire account or project `arbitrage-feather-sdk`
+2. Scope: entire account or project `feather-sdk`
 3. Add as repository secret `PYPI_API_TOKEN`
 
 Optional: configure a GitHub **environment** named `pypi` with required reviewers for production publishes.
@@ -88,5 +88,5 @@ Actions → **Release** → **Run workflow**
 
 ```bash
 npm install @arbitrage/sdk@0.1.0
-pip install arbitrage-feather-sdk==0.1.0
+pip install feather-sdk==0.1.0
 ```

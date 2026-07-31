@@ -40,7 +40,7 @@ When adding user-facing features, update `docs/` and the relevant `meta.json`.
 
 ## Release SDKs
 
-Create a GitHub Release with tag `v0.1.0` → CI publishes `@arbitrage/sdk` and `arbitrage-feather-sdk`.
+Create a GitHub Release with tag `v0.1.0` → CI publishes `@arbitrage/sdk` and `feather-sdk`.
 
 Required secrets: `NPM_TOKEN`, `PYPI_API_TOKEN`. See [docs/operations/publishing.md](docs/operations/publishing.md).
 

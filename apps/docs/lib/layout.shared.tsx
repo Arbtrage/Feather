@@ -18,7 +18,7 @@ export function baseOptions(): BaseLayoutProps {
       },
       {
         text: "PyPI",
-        url: "https://pypi.org/project/arbitrage-feather-sdk/",
+        url: "https://pypi.org/project/feather-sdk/",
         external: true,
       },
     ],

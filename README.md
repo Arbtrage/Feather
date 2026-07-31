@@ -41,7 +41,7 @@ feather/
 │   ├── server/           Rust feather-server
 │   ├── ui/               Monitoring SPA (bundled into SDKs)
 │   ├── sdk-node/         @arbitrage/sdk
-│   └── sdk-python/       arbitrage-feather-sdk
+│   └── sdk-python/       feather-sdk
 ├── docs/                 Documentation markdown source
 ├── examples/             Node & Python workers
 ├── docker/               Compose & Dockerfiles

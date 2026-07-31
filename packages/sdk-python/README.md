@@ -1,11 +1,11 @@
-# arbitrage-feather-sdk
+# feather-sdk
 
 Python SDK for [Feather](https://github.com/your-org/feather) — enqueue tasks and run workers in-process (Celery-style) or as dedicated processes.
 
 ## Install
 
 ```bash
-pip install arbitrage-feather-sdk
+pip install feather-sdk
 ```
 
 Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`).

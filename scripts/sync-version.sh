@@ -40,7 +40,7 @@ text, n = re.subn(r'^version = ".*"$', f'version = "{version}"', text, count=1, 
 if n != 1:
     raise SystemExit("failed to update pyproject.toml version")
 path.write_text(text)
-print(f"arbitrage-feather-sdk -> {version}")
+print(f"feather-sdk -> {version}")
 PY
 
 echo "version sync complete: $VERSION"
