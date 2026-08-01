@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cross-language e2e: Node enqueue → Python worker
+# Python-only e2e: enqueue → worker smoke test
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export FEATHER_ADDRESS="${FEATHER_ADDRESS:-localhost:50051}"
@@ -11,11 +11,9 @@ WORKER_PID=$!
 trap 'kill $WORKER_PID 2>/dev/null || true' EXIT
 sleep 2
 
-echo "Enqueueing jobs via Node..."
-cd "$ROOT/examples/node-worker"
-npm install --silent 2>/dev/null || npm install
-COUNT=3 npm run enqueue
+echo "Enqueueing jobs via Python..."
+COUNT=3 python3 "$ROOT/examples/python-worker/enqueue.py"
 
 echo "Waiting for worker..."
 sleep 5
-echo "Cross-language smoke complete."
+echo "Python integration smoke complete."

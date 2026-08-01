@@ -4,12 +4,12 @@ Feather provides a read-only monitoring UI for queue stats and jobs.
 
 ## Recommended: SDK embedded UI
 
-Enable the UI from your application when using `@arbitrage/feather` or `arbitrage-feather`:
+Enable the UI from your application when using `getfeather`:
 
-```javascript
-const app = new FeatherApp({ ui: { enabled: true, port: 3001 } });
-await app.startEmbedded();
-// → http://127.0.0.1:3001
+```python
+app = FeatherApp(ui={"enabled": True, "port": 3001})
+await app.start_embedded()
+# → http://127.0.0.1:3001
 ```
 
 See [Embedded monitoring UI](../sdks/ui.md) for full configuration.

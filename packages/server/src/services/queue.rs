@@ -66,15 +66,28 @@ impl QueueService {
         &self,
         worker_id: &str,
         queues: &[String],
-        _wait_timeout_ms: i32,
-    ) -> Result<Option<Job>, StorageError> {
+        wait_timeout_ms: i32,
+        max_jobs: i32,
+    ) -> Result<Vec<Job>, StorageError> {
         let qs: Vec<String> = if queues.is_empty() {
             vec!["default".to_string()]
         } else {
             queues.to_vec()
         };
+        let wait = if wait_timeout_ms <= 0 {
+            0
+        } else {
+            wait_timeout_ms as u64
+        };
+        let max = if max_jobs <= 0 { 1 } else { max_jobs as u32 };
         self.store
-            .dequeue(worker_id, &qs, self.config.default_lease_duration_ms)
+            .dequeue(
+                worker_id,
+                &qs,
+                self.config.default_lease_duration_ms,
+                wait,
+                max,
+            )
             .await
     }
 

@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "sdk-python"))
 
-from arbitrage.feather import FeatherClient
+from getfeather import FeatherClient
 
 
 def main() -> None:

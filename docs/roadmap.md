@@ -9,7 +9,8 @@ Reliable job processing with lease-based delivery.
 - Enqueue, dequeue, ack, nack, extend lease
 - Worker registration and heartbeat
 - Redis-backed storage
-- Node.js and Python SDKs
+- Python SDK (`getfeather`) with embedded worker + bundled UI
+- Blocking dequeue (BRPOP), batch claim, ZSET lease sweeper
 - Read-only dashboard
 - Docker Compose dev stack
 
@@ -35,7 +36,7 @@ Reliable job processing with lease-based delivery.
 - Activities (jobs evolve into activity tasks)
 - Durable timers, signals, and queries
 - Event history and deterministic replay
-- Workflow SDK for Node.js and Python
+- Workflow SDK for Python
 
 ## Phase 5 — Enterprise
 

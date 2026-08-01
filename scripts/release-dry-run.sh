@@ -6,7 +6,7 @@ VERSION="${1:-}"
 
 if [[ -z "$VERSION" ]]; then
   echo "usage: release-dry-run.sh <version>" >&2
-  echo "  example: release-dry-run.sh 0.1.0" >&2
+  echo "  example: release-dry-run.sh 0.2.0" >&2
   exit 1
 fi
 
@@ -37,20 +37,15 @@ chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
 ensure_python_tools grpcio-tools "build>=1.2" "hatchling>=1.27.0"
 ./scripts/bundle-protos.sh
 ./scripts/bundle-ui.sh
-npm ci
-npm run build -w @arbitrage/feather
-test -d packages/sdk-node/ui-static/assets
+test -d packages/sdk-python/getfeather/ui_static/assets
 
 ensure_python_tools "build>=1.2" "hatchling>=1.27.0" grpcio-tools "twine>=6.1.0"
-./scripts/bundle-protos.sh
-./scripts/bundle-ui.sh
-test -d packages/sdk-python/arbitrage/feather/ui_static/assets
 cd "$ROOT/packages/sdk-python"
 "$PY" -m build
 "$PY" -m twine check dist/*
 cd "$ROOT"
 
-node --test tests/contract/node_contract.test.mjs
+python tests/contract/python_contract.py
 
 echo ""
 echo "Release validate passed for v$VERSION"

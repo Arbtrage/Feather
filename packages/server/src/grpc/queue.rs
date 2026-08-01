@@ -81,33 +81,30 @@ impl QueueService for QueueGrpc {
         } else {
             req.wait_timeout_ms
         };
-        let deadline = tokio::time::Instant::now() + std::time::Duration::from_millis(wait as u64);
-        let mut empty_streak = 0u32;
+        let max_jobs = if req.max_jobs <= 0 { 1 } else { req.max_jobs };
 
-        loop {
-            match self.inner.dequeue(&req.worker_id, &req.queues, wait).await {
-                Ok(Some(job)) => {
-                    return Ok(Response::new(DequeueResponse {
-                        job: Some(job_to_proto(&job)),
-                        backoff_hint_ms: 0,
-                        slow_down: false,
-                    }));
-                }
-                Ok(None) => {
-                    if tokio::time::Instant::now() >= deadline {
-                        let backoff = std::cmp::min(1000 * empty_streak.max(1), 30000);
-                        return Ok(Response::new(DequeueResponse {
-                            job: None,
-                            backoff_hint_ms: backoff as i32,
-                            slow_down: false,
-                        }));
-                    }
-                    empty_streak += 1;
-                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                }
-                Err(e) => return Err(map_storage_err(e)),
-            }
+        let jobs = self
+            .inner
+            .dequeue(&req.worker_id, &req.queues, wait, max_jobs)
+            .await
+            .map_err(map_storage_err)?;
+
+        if jobs.is_empty() {
+            return Ok(Response::new(DequeueResponse {
+                job: None,
+                jobs: vec![],
+                backoff_hint_ms: 1000,
+                slow_down: false,
+            }));
         }
+
+        let protos: Vec<Job> = jobs.iter().map(job_to_proto).collect();
+        Ok(Response::new(DequeueResponse {
+            job: protos.first().cloned(),
+            jobs: protos,
+            backoff_hint_ms: 0,
+            slow_down: false,
+        }))
     }
 
     async fn ack(&self, request: Request<AckRequest>) -> Result<Response<AckResponse>, Status> {

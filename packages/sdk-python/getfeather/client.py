@@ -78,5 +78,20 @@ class FeatherClient:
             "state": j.state,
         }
 
+    def extend_lease(
+        self,
+        job_id: str,
+        *,
+        worker_id: str,
+        extension_ms: int = 30_000,
+    ) -> None:
+        self._stub.ExtendLease(
+            self._queue_pb2.ExtendLeaseRequest(
+                job_id=job_id,
+                worker_id=worker_id,
+                extension_ms=extension_ms,
+            )
+        )
+
     def close(self) -> None:
         self._channel.close()

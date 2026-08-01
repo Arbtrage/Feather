@@ -32,12 +32,12 @@ completed  failed
 
 Long-running jobs can extend their lease before it expires:
 
-```javascript
-// SDK auto-renews at 50% of lease TTL
-await client.extendLease({ jobId, workerId, extensionMs: 30000 });
+```python
+# Python worker auto-renews at 50% of lease TTL via ExtendLease
+client.extend_lease(job_id, worker_id=worker_id, extension_ms=30_000)
 ```
 
-The Node and Python SDKs renew leases automatically at 50% of the TTL. The server enforces a maximum renewal count (default: 100) to prevent infinite leases.
+The Python SDK renews leases automatically at 50% of the TTL while a job runs. The server enforces a maximum renewal count (default: 100) to prevent infinite leases.
 
 ## Delivery semantics
 

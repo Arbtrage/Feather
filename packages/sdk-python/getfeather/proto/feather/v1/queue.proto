@@ -37,6 +37,7 @@ message DequeueResponse {
   Job job = 1;
   int32 backoff_hint_ms = 2;
   bool slow_down = 3;
+  repeated Job jobs = 4;
 }
 
 message AckRequest {

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Set SDK package versions from a git tag (e.g. v0.1.0 → 0.1.0).
+# Set Python SDK package version from a git tag (e.g. v0.2.0 → 0.2.0).
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
   echo "usage: sync-version.sh <tag-or-version>" >&2
-  echo "  examples: sync-version.sh v0.1.0  |  sync-version.sh 0.1.0" >&2
+  echo "  examples: sync-version.sh v0.2.0  |  sync-version.sh 0.2.0" >&2
   exit 1
 fi
 
@@ -17,17 +17,7 @@ if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-NODE_PKG="$ROOT/packages/sdk-node/package.json"
 PY_PROJECT="$ROOT/packages/sdk-python/pyproject.toml"
-
-node -e "
-const fs = require('fs');
-const p = '$NODE_PKG';
-const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-j.version = '$VERSION';
-fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
-console.log('@arbitrage/feather ->', '$VERSION');
-"
 
 python3 - <<PY
 from pathlib import Path
@@ -40,7 +30,7 @@ text, n = re.subn(r'^version = ".*"$', f'version = "{version}"', text, count=1, 
 if n != 1:
     raise SystemExit("failed to update pyproject.toml version")
 path.write_text(text)
-print(f"arbitrage-feather -> {version}")
+print(f"getfeather -> {version}")
 PY
 
 echo "version sync complete: $VERSION"

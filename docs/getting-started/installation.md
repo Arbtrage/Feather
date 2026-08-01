@@ -6,37 +6,35 @@
 |------|---------|---------|
 | Docker & Docker Compose | Latest | Full local stack |
 | Rust | 1.78+ | Server development |
-| Node.js | 20+ | Node SDK and examples |
+| Node.js | 20+ | UI and docs site builds (not required for SDK users) |
 | Python | 3.11+ | Python SDK and examples |
 | Redis | 7+ | Required if running server outside Docker |
 
 ## Clone the repository
 
 ```bash
-git clone https://github.com/your-org/feather.git
-cd feather
+git clone https://github.com/Arbtrage/Feather.git
+cd Feather
 ```
 
-## Install SDK dependencies
+## Install published SDK
 
-### Node.js
+### Python — `getfeather`
 
 ```bash
-cd packages/sdk-node
-npm install
-npm run build
+pip install getfeather
+uv pip install getfeather
+pipx install getfeather
+uv add getfeather   # inside a uv project
 ```
 
-### Python
+## Install from monorepo (development)
 
 ```bash
+chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh
+./scripts/bundle-protos.sh
+./scripts/bundle-ui.sh
 pip install ./packages/sdk-python
-```
-
-Or with uv:
-
-```bash
-uv pip install -e packages/sdk-python
 ```
 
 ## Install server (optional, for local dev)

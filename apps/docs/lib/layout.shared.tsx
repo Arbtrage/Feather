@@ -12,13 +12,8 @@ export function baseOptions(): BaseLayoutProps {
         external: true,
       },
       {
-        text: "npm",
-        url: "https://www.npmjs.com/package/@arbitrage/feather",
-        external: true,
-      },
-      {
         text: "PyPI",
-        url: "https://pypi.org/project/arbitrage-feather/",
+        url: "https://pypi.org/project/getfeather/",
         external: true,
       },
     ],

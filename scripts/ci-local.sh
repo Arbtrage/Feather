@@ -23,21 +23,16 @@ fi
 echo "=== ui package ==="
 cd packages/ui && npm install && npm run build
 cd "$ROOT"
-chmod +x scripts/bundle-ui.sh
+chmod +x scripts/bundle-ui.sh scripts/bundle-protos.sh
 ./scripts/bundle-ui.sh
-
-echo "=== node sdk ==="
-cd packages/sdk-node && npm install && npm run build
-cd "$ROOT"
-node --test tests/contract/node_contract.test.mjs
 
 echo "=== python sdk ==="
 pip install grpcio-tools
-chmod +x scripts/bundle-protos.sh
 ./scripts/bundle-protos.sh
 ./scripts/bundle-ui.sh
 pip install ./packages/sdk-python
-python -c "from arbitrage.feather import FeatherApp, FeatherClient, Worker"
+python -c "from getfeather import FeatherApp, FeatherClient, Worker"
+python tests/contract/python_contract.py
 
 echo "=== docs site ==="
 cd apps/docs && npm install && npm run build

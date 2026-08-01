@@ -1,13 +1,13 @@
 # Feather
 
-Feather is a durable execution platform — a Rust control plane with Redis-backed job queues, Node.js and Python worker SDKs, and a read-only operations dashboard.
+Feather is a durable execution platform — a Rust control plane with Redis-backed job queues, a Python worker SDK, and a read-only operations dashboard.
 
 Phase 1 delivers reliable **enqueue → lease → execute → ack** job processing over gRPC with at-least-once delivery semantics.
 
 ## Architecture
 
 ```
-Clients (Node / Python SDK)
+Python clients (getfeather)
         │
         ▼ gRPC
 ┌───────────────────────────┐
@@ -29,7 +29,8 @@ Clients (Node / Python SDK)
 **Included:**
 
 - Single queue with lease-based job delivery
-- Ack, nack, and lease extension
+- Blocking dequeue (Redis BRPOP) and batch claim
+- Ack, nack, and lease extension with auto-renewal in the Python worker
 - Worker registration and heartbeat
 - Read-only dashboard (queue depth, jobs list, job detail)
 - Docker Compose dev stack
@@ -45,5 +46,6 @@ Clients (Node / Python SDK)
 ## Quick links
 
 - [Quickstart](getting-started/quickstart.md) — running locally in minutes
-- [Node.js SDK](sdks/node.md) — enqueue and run workers
+- [Python SDK](sdks/python.md) — enqueue and run workers
+- [Performance](operations/performance.md) — throughput and latency notes
 - [Configuration](reference/configuration.md) — environment variables

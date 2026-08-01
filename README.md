@@ -1,6 +1,6 @@
 # Feather
 
-A durable execution platform — Rust control plane, Redis-backed job queues, Node.js and Python worker SDKs.
+A durable execution platform — Rust control plane, Redis-backed job queues, and a Python worker SDK.
 
 Phase 1 delivers reliable **enqueue → lease → execute → ack** job processing over gRPC with at-least-once delivery.
 
@@ -11,11 +11,17 @@ docker compose -f docker/docker-compose.yml up --build redis feather-server
 ```
 
 ```bash
-cd examples/embedded-node && npm install
-FEATHER_ADDRESS=localhost:50051 npm start
+pip install getfeather
+# or from monorepo: pip install ./packages/sdk-python
 ```
 
-Embedded mode starts a worker and optional monitoring UI (`http://127.0.0.1:3001` when `ui.enabled`).
+```python
+from getfeather import FeatherApp
+
+app = FeatherApp(ui={"enabled": True, "port": 3001})
+```
+
+See `examples/embedded-python/` for a full embedded worker example.
 
 ## Documentation
 
@@ -25,8 +31,9 @@ Source markdown in [`docs/`](docs/):
 
 - [Quickstart](docs/getting-started/quickstart.md)
 - [Embedded mode](docs/sdks/embedded.md) · [Embedded UI](docs/sdks/ui.md)
-- [Node.js SDK](docs/sdks/node.md) · [Python SDK](docs/sdks/python.md)
+- [Python SDK](docs/sdks/python.md)
 - [Configuration](docs/reference/configuration.md)
+- [Performance](docs/operations/performance.md)
 - [Roadmap](docs/roadmap.md)
 - [Vercel deploy guide](docs/operations/vercel.md)
 
@@ -39,11 +46,10 @@ feather/
 ├── packages/
 │   ├── proto/            feather.v1 protobuf definitions
 │   ├── server/           Rust feather-server
-│   ├── ui/               Monitoring SPA (bundled into SDKs)
-│   ├── sdk-node/         @arbitrage/feather (npm)
-│   └── sdk-python/       arbitrage-feather (PyPI)
+│   ├── ui/               Monitoring SPA (bundled into Python SDK)
+│   └── sdk-python/       getfeather (PyPI)
 ├── docs/                 Documentation markdown source
-├── examples/             Node & Python workers
+├── examples/             Python workers
 ├── docker/               Compose & Dockerfiles
 └── tests/                Integration & contract tests
 ```

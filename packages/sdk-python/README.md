@@ -1,11 +1,13 @@
-# arbitrage-feather
+# getfeather
 
 Python SDK for [Feather](https://github.com/Arbtrage/Feather) — enqueue tasks and run workers in-process (Celery-style) or as dedicated processes.
 
 ## Install
 
 ```bash
-pip install arbitrage-feather
+pip install getfeather
+uv pip install getfeather
+pipx install getfeather
 ```
 
 Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`).
@@ -14,7 +16,7 @@ Requires a running Feather server (`FEATHER_ADDRESS`, default `localhost:50051`)
 
 ```python
 import asyncio
-from arbitrage.feather import FeatherApp
+from getfeather import FeatherApp
 
 app = FeatherApp()
 
@@ -37,7 +39,7 @@ asyncio.run(main())
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from arbitrage.feather import FeatherApp
+from getfeather import FeatherApp
 
 feather = FeatherApp()
 

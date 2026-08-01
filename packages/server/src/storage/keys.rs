@@ -40,6 +40,10 @@ impl KeyBuilder {
     pub fn job_prefix(&self) -> String {
         format!("fe:{}:job:", self.namespace)
     }
+
+    pub fn queue_registry(&self) -> String {
+        format!("fe:{}:queues", self.namespace)
+    }
 }
 
 #[cfg(test)]

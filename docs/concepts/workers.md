@@ -6,7 +6,7 @@ Workers are long-running processes that poll Feather for jobs, execute user code
 
 ```
 1. Register  ──► server returns lease_duration_ms, heartbeat_interval_ms
-2. Poll loop ──► Dequeue (long-poll, up to 30s)
+2. Poll loop ──► Dequeue (blocking on server via Redis BRPOP, up to 30s)
 3. Execute   ──► dispatch to handler by task name
 4. Ack/Nack  ──► report outcome
 5. Heartbeat ──► periodic keep-alive (every 10s default)
@@ -17,12 +17,12 @@ Workers are long-running processes that poll Feather for jobs, execute user code
 
 Workers identify themselves and declare which queues they serve:
 
-```javascript
-const worker = new Worker({
-  address: "localhost:50051",
-  workerId: "node-worker-1",
-  queues: ["default", "high-priority"],
-});
+```python
+worker = Worker(
+    address="localhost:50051",
+    worker_id="python-worker-1",
+    queues=["default", "high-priority"],
+)
 ```
 
 Registration includes optional metadata (Phase 1):
@@ -38,10 +38,14 @@ Registration includes optional metadata (Phase 1):
 
 Workers use pull-based long-polling:
 
-- Send `Dequeue` with `wait_timeout_ms` (default 30,000 ms)
-- Server returns a job immediately if one is available
-- If the queue is empty, the server holds the request until a job arrives or the timeout expires
-- Empty responses include a `backoff_hint_ms` for adaptive polling
+- Send `Dequeue` with `wait_timeout_ms` (default 30,000 ms) and optional `max_jobs`
+- Server returns jobs immediately if available (non-blocking RPOP first)
+- If the queue is empty, the server blocks on Redis BRPOP until a job arrives or the timeout expires
+- Empty responses include a `backoff_hint_ms` for client backoff
+
+## Lease renewal
+
+The Python worker renews leases at **50% of the registered lease TTL** while a job runs, via `ExtendLease`. This prevents false redelivery for tasks that exceed the default lease duration.
 
 ## Heartbeat
 
@@ -55,15 +59,13 @@ Workers send periodic heartbeats to remain visible to the server:
 
 Register handlers by task name:
 
-```javascript
-worker.task("echo", async (ctx) => {
-  const data = JSON.parse(ctx.payload.toString());
-  console.log("received:", data);
-});
+```python
+async def echo(ctx):
+    data = json.loads(ctx.payload.decode())
+    print("received:", data)
 
-worker.task("send-email", async (ctx) => {
-  await sendEmail(ctx.payload);
-});
+worker.task("echo", echo)
+worker.task("send-email", send_email)
 ```
 
 Each handler receives a context with:
@@ -76,17 +78,6 @@ Each handler receives a context with:
 | `ctx.payload` | Raw payload bytes |
 | `ctx.ack()` | Mark job completed |
 | `ctx.nack(reason)` | Mark job failed |
-
-## Middleware
-
-The Node SDK supports middleware for logging, tracing, and error handling:
-
-```javascript
-worker.use(async (ctx, next) => {
-  console.log(`processing ${ctx.id}`);
-  await next();
-});
-```
 
 ## Graceful shutdown
 

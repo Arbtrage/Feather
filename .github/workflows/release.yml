@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Semver to release (e.g. 0.1.2)"
+        description: "Semver to release (e.g. 0.2.0)"
         required: true
         type: string
       dry_run:
@@ -52,27 +52,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Bundle protos, UI, and build Node SDK
+      - name: Bundle protos, UI, and build Python SDK
         run: |
           chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh scripts/sync-version.sh
           ./scripts/sync-version.sh "${{ needs.resolve-version.outputs.version }}"
-          pip install grpcio-tools
-          ./scripts/bundle-protos.sh
-          ./scripts/bundle-ui.sh
-          npm ci
-          npm run build -w @arbitrage/feather
-
-      - name: Build Python SDK
-        run: |
-          pip install "build>=1.2" "hatchling>=1.27.0" grpcio-tools
+          pip install grpcio-tools "build>=1.2" "hatchling>=1.27.0"
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
           cd packages/sdk-python && python -m build
           python -m pip install "twine>=6.1.0"
           python -m twine check dist/*
+          test -d getfeather/ui_static/assets
 
       - name: Contract tests
-        run: node --test tests/contract/node_contract.test.mjs
+        run: python tests/contract/python_contract.py
 
   publish:
     needs: [resolve-version, validate]
@@ -86,7 +79,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          registry-url: https://registry.npmjs.org
 
       - uses: actions/setup-python@v5
         with:
@@ -99,23 +91,12 @@ jobs:
           pip install grpcio-tools "build>=1.2" "hatchling>=1.27.0"
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
-          npm ci
-          npm run build -w @arbitrage/feather
-          test -d packages/sdk-node/ui-static/assets
           cd packages/sdk-python && python -m build
           python -m pip install "twine>=6.1.0"
           python -m twine check dist/*
-          test -d arbitrage/feather/ui_static/assets
+          test -d getfeather/ui_static/assets
 
-      - name: Publish @arbitrage/feather to npm
-        working-directory: packages/sdk-node
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm pkg fix
-          npm publish --access public
-
-      - name: Publish arbitrage-feather to PyPI
+      - name: Publish getfeather to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
@@ -143,11 +124,12 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Package | Registry | Status |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---------|----------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| @arbitrage/feather | [npm](https://www.npmjs.com/package/@arbitrage/feather) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| arbitrage-feather | [PyPI](https://pypi.org/project/arbitrage-feather/) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| getfeather | [PyPI](https://pypi.org/project/getfeather/) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Install" >> "$GITHUB_STEP_SUMMARY"
           echo '```bash' >> "$GITHUB_STEP_SUMMARY"
-          echo "npm install @arbitrage/feather@${VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          echo "pip install arbitrage-feather==${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "pip install getfeather==${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "uv pip install getfeather==${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "pipx install getfeather==${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "uv add getfeather==${VERSION}" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

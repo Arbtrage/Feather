@@ -6,6 +6,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use deadpool_redis::{Config, Pool, Runtime};
 use redis::AsyncCommands;
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 pub struct RedisStore {
     pool: Pool,
@@ -140,12 +141,14 @@ impl ActivityQueueStore for RedisStore {
         let job_key = self.keys.job(&job.id);
         let pending = self.keys.queue_pending(&job.queue);
         let recent = self.keys.recent_jobs();
+        let registry = self.keys.queue_registry();
 
         let fields = Self::job_to_hash(&job);
         let mut pipe = redis::pipe();
         pipe.atomic();
         pipe.hset_multiple(&job_key, &fields);
         pipe.lpush(&pending, &job.id);
+        pipe.sadd(&registry, &job.queue);
         pipe.zadd(
             &recent,
             job.id.as_str(),
@@ -165,49 +168,58 @@ impl ActivityQueueStore for RedisStore {
         worker_id: &str,
         queues: &[String],
         lease_duration_ms: u64,
-    ) -> StorageResult<Option<Job>> {
-        let lease_ms = (Utc::now() + chrono::Duration::milliseconds(lease_duration_ms as i64))
-            .timestamp_millis();
-        let updated_at = Utc::now().timestamp_millis();
-        let job_prefix = self.keys.job_prefix();
+        wait_timeout_ms: u64,
+        max_jobs: u32,
+    ) -> StorageResult<Vec<Job>> {
+        let max_jobs = max_jobs.clamp(1, 64) as usize;
+        let deadline = Instant::now() + Duration::from_millis(wait_timeout_ms);
+        let mut jobs = Vec::new();
 
-        for queue in queues {
+        while jobs.len() < max_jobs {
+            if let Some(job) = self
+                .try_claim_nonblocking(worker_id, queues, lease_duration_ms)
+                .await?
+            {
+                jobs.push(job);
+                continue;
+            }
+
+            if wait_timeout_ms == 0 || Instant::now() >= deadline {
+                break;
+            }
+
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            let block_secs = remaining.as_secs().clamp(1, 30) as f64;
+            let pending_keys: Vec<String> =
+                queues.iter().map(|q| self.keys.queue_pending(q)).collect();
+
             let mut conn = self
                 .pool
                 .get()
                 .await
                 .map_err(|e| StorageError::Redis(e.to_string()))?;
-            let pending = self.keys.queue_pending(queue);
-            let leased_key = self.keys.queue_leased(queue);
-
-            let script = r#"
-                local job_id = redis.call('RPOP', KEYS[1])
-                if not job_id then return nil end
-                local job_key = ARGV[4] .. job_id
-                redis.call('HSET', job_key, 'state', 'leased', 'worker_id', ARGV[1],
-                    'lease_expires_at', ARGV[2], 'updated_at', ARGV[3])
-                redis.call('ZADD', KEYS[2], ARGV[2], job_id)
-                return job_id
-            "#;
-
-            let job_id: Option<String> = redis::Script::new(script)
-                .key(&pending)
-                .key(&leased_key)
-                .arg(worker_id)
-                .arg(lease_ms.to_string())
-                .arg(updated_at.to_string())
-                .arg(&job_prefix)
-                .invoke_async(&mut conn)
+            let brpop_result: Option<(String, String)> = conn
+                .brpop(&pending_keys, block_secs)
                 .await
                 .map_err(|e| StorageError::Redis(e.to_string()))?;
 
-            let Some(job_id) = job_id else { continue };
+            let Some((pending_key, job_id)) = brpop_result else {
+                break;
+            };
 
-            let job = self.get_job(&job_id).await?;
-            self.append_event(&job_id, "leased").await?;
-            return Ok(Some(job));
+            let Some(queue) = queue_from_pending_key(&pending_key) else {
+                continue;
+            };
+
+            if let Some(job) = self
+                .claim_job_id(worker_id, &queue, &job_id, lease_duration_ms)
+                .await?
+            {
+                jobs.push(job);
+            }
         }
-        Ok(None)
+
+        Ok(jobs)
     }
 
     async fn ack(&self, job_id: &str, worker_id: &str) -> StorageResult<()> {
@@ -342,53 +354,56 @@ impl ActivityQueueStore for RedisStore {
             .get()
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;
-        let now_ms = Utc::now().timestamp_millis() as f64;
+        let now_ms = Utc::now().timestamp_millis();
+        let updated_at = now_ms.to_string();
         let mut released = 0u64;
 
-        // Scan all leased keys via recent jobs index queues - simplified: scan known queue "default"
-        // Production: track queue registry; Phase 1 uses pattern from job hash queue field
-        let recent: Vec<String> = conn
-            .zrevrange(self.keys.recent_jobs(), 0, 999)
+        let queues: Vec<String> = conn
+            .smembers(self.keys.queue_registry())
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;
 
-        for job_id in recent {
-            let job = match self.get_job(&job_id).await {
-                Ok(j) => j,
-                Err(_) => continue,
-            };
-            if job.state != JobState::Leased {
-                continue;
-            }
-            let Some(exp) = job.lease_expires_at else {
-                continue;
-            };
-            if exp.timestamp_millis() as f64 > now_ms {
-                continue;
-            }
+        let requeue_script = r#"
+            local job_id = ARGV[1]
+            local job_key = ARGV[2]
+            local now_ms = tonumber(ARGV[3])
+            local state = redis.call('HGET', job_key, 'state')
+            if state ~= 'leased' then return 0 end
+            local exp = redis.call('HGET', job_key, 'lease_expires_at')
+            if (not exp) or exp == '' or tonumber(exp) > now_ms then return 0 end
+            redis.call('HSET', job_key, 'state', 'pending', 'worker_id', '',
+                'lease_expires_at', '', 'updated_at', ARGV[4])
+            redis.call('ZREM', KEYS[1], job_id)
+            redis.call('LPUSH', KEYS[2], job_id)
+            return 1
+        "#;
 
-            let pending = self.keys.queue_pending(&job.queue);
-            let job_key = self.keys.job(&job_id);
-            let leased_key = self.keys.queue_leased(&job.queue);
-
-            let mut pipe = redis::pipe();
-            pipe.atomic();
-            pipe.hset(&job_key, "state", "pending");
-            pipe.hset(&job_key, "worker_id", "");
-            pipe.hset(&job_key, "lease_expires_at", "");
-            pipe.hset(
-                &job_key,
-                "updated_at",
-                Utc::now().timestamp_millis().to_string(),
-            );
-            pipe.zrem(&leased_key, &job_id);
-            pipe.lpush(&pending, &job_id);
-            pipe.query_async::<()>(&mut conn)
+        for queue in queues {
+            let leased_key = self.keys.queue_leased(&queue);
+            let pending = self.keys.queue_pending(&queue);
+            let expired: Vec<String> = conn
+                .zrangebyscore(&leased_key, 0, now_ms as f64)
                 .await
                 .map_err(|e| StorageError::Redis(e.to_string()))?;
 
-            self.append_event(&job_id, "lease_expired").await?;
-            released += 1;
+            for job_id in expired {
+                let job_key = self.keys.job(&job_id);
+                let did: i32 = redis::Script::new(requeue_script)
+                    .key(&leased_key)
+                    .key(&pending)
+                    .arg(&job_id)
+                    .arg(&job_key)
+                    .arg(now_ms.to_string())
+                    .arg(&updated_at)
+                    .invoke_async(&mut conn)
+                    .await
+                    .map_err(|e| StorageError::Redis(e.to_string()))?;
+
+                if did == 1 {
+                    self.append_event(&job_id, "lease_expired").await?;
+                    released += 1;
+                }
+            }
         }
         Ok(released)
     }
@@ -471,6 +486,106 @@ impl ActivityQueueStore for RedisStore {
 }
 
 impl RedisStore {
+    async fn try_claim_nonblocking(
+        &self,
+        worker_id: &str,
+        queues: &[String],
+        lease_duration_ms: u64,
+    ) -> StorageResult<Option<Job>> {
+        for queue in queues {
+            let mut conn = self
+                .pool
+                .get()
+                .await
+                .map_err(|e| StorageError::Redis(e.to_string()))?;
+            let pending = self.keys.queue_pending(queue);
+            let leased_key = self.keys.queue_leased(queue);
+            let lease_ms = (Utc::now() + chrono::Duration::milliseconds(lease_duration_ms as i64))
+                .timestamp_millis();
+            let updated_at = Utc::now().timestamp_millis();
+            let job_prefix = self.keys.job_prefix();
+
+            let script = r#"
+                local job_id = redis.call('RPOP', KEYS[1])
+                if not job_id then return nil end
+                local job_key = ARGV[4] .. job_id
+                redis.call('HSET', job_key, 'state', 'leased', 'worker_id', ARGV[1],
+                    'lease_expires_at', ARGV[2], 'updated_at', ARGV[3])
+                redis.call('ZADD', KEYS[2], ARGV[2], job_id)
+                return job_id
+            "#;
+
+            let job_id: Option<String> = redis::Script::new(script)
+                .key(&pending)
+                .key(&leased_key)
+                .arg(worker_id)
+                .arg(lease_ms.to_string())
+                .arg(updated_at.to_string())
+                .arg(&job_prefix)
+                .invoke_async(&mut conn)
+                .await
+                .map_err(|e| StorageError::Redis(e.to_string()))?;
+
+            let Some(job_id) = job_id else {
+                continue;
+            };
+
+            let job = self.get_job(&job_id).await?;
+            self.append_event(&job_id, "leased").await?;
+            return Ok(Some(job));
+        }
+        Ok(None)
+    }
+
+    async fn claim_job_id(
+        &self,
+        worker_id: &str,
+        queue: &str,
+        job_id: &str,
+        lease_duration_ms: u64,
+    ) -> StorageResult<Option<Job>> {
+        let mut conn = self
+            .pool
+            .get()
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
+        let leased_key = self.keys.queue_leased(queue);
+        let lease_ms = (Utc::now() + chrono::Duration::milliseconds(lease_duration_ms as i64))
+            .timestamp_millis();
+        let updated_at = Utc::now().timestamp_millis();
+        let job_prefix = self.keys.job_prefix();
+
+        let script = r#"
+            local job_id = ARGV[1]
+            local job_key = ARGV[5] .. job_id
+            local state = redis.call('HGET', job_key, 'state')
+            if state ~= 'pending' then return nil end
+            redis.call('HSET', job_key, 'state', 'leased', 'worker_id', ARGV[2],
+                'lease_expires_at', ARGV[3], 'updated_at', ARGV[4])
+            redis.call('ZADD', KEYS[1], ARGV[3], job_id)
+            return job_id
+        "#;
+
+        let claimed: Option<String> = redis::Script::new(script)
+            .key(&leased_key)
+            .arg(job_id)
+            .arg(worker_id)
+            .arg(lease_ms.to_string())
+            .arg(updated_at.to_string())
+            .arg(&job_prefix)
+            .invoke_async(&mut conn)
+            .await
+            .map_err(|e| StorageError::Redis(e.to_string()))?;
+
+        let Some(claimed_id) = claimed else {
+            return Ok(None);
+        };
+
+        let job = self.get_job(&claimed_id).await?;
+        self.append_event(&claimed_id, "leased").await?;
+        Ok(Some(job))
+    }
+
     async fn trim_recent(&self) -> StorageResult<()> {
         let mut conn = self
             .pool
@@ -486,5 +601,14 @@ impl RedisStore {
             .await
             .map_err(|e| StorageError::Redis(e.to_string()))?;
         Ok(())
+    }
+}
+
+fn queue_from_pending_key(key: &str) -> Option<String> {
+    let parts: Vec<&str> = key.split(':').collect();
+    if parts.len() >= 5 && parts[2] == "queue" && parts.last() == Some(&"pending") {
+        Some(parts[3].to_string())
+    } else {
+        None
     }
 }

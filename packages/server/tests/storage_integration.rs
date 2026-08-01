@@ -36,9 +36,11 @@ async fn enqueue_dequeue_ack_happy_path() {
 
     store.enqueue(job).await.expect("enqueue");
     let leased = store
-        .dequeue("worker-1", &["default".into()], 30_000)
+        .dequeue("worker-1", &["default".into()], 30_000, 0, 1)
         .await
         .expect("dequeue")
+        .into_iter()
+        .next()
         .expect("job");
     assert_eq!(leased.id, job_id);
     assert_eq!(leased.state, JobState::Leased);
@@ -64,7 +66,7 @@ async fn nack_marks_failed() {
     let job_id = job.id.clone();
     store.enqueue(job).await.unwrap();
     store
-        .dequeue("w", &["default".into()], 30_000)
+        .dequeue("w", &["default".into()], 30_000, 0, 1)
         .await
         .unwrap();
 
@@ -92,10 +94,9 @@ async fn concurrent_dequeue_one_winner() {
     let s2 = store.clone();
     let queues = vec!["default".to_string()];
     let (a, b) = tokio::join!(
-        s1.dequeue("w1", &queues, 30_000),
-        s2.dequeue("w2", &queues, 30_000),
+        s1.dequeue("w1", &queues, 30_000, 0, 1),
+        s2.dequeue("w2", &queues, 30_000, 0, 1),
     );
-    let got = [a.unwrap(), b.unwrap()];
-    let winners = got.iter().filter(|j| j.is_some()).count();
-    assert_eq!(winners, 1);
+    let total_claimed = a.unwrap().len() + b.unwrap().len();
+    assert_eq!(total_claimed, 1);
 }

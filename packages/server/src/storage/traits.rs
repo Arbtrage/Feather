@@ -33,7 +33,9 @@ pub trait ActivityQueueStore: Send + Sync {
         worker_id: &str,
         queues: &[String],
         lease_duration_ms: u64,
-    ) -> StorageResult<Option<Job>>;
+        wait_timeout_ms: u64,
+        max_jobs: u32,
+    ) -> StorageResult<Vec<Job>>;
     async fn ack(&self, job_id: &str, worker_id: &str) -> StorageResult<()>;
     async fn nack(&self, job_id: &str, worker_id: &str, reason: &str) -> StorageResult<()>;
     async fn extend_lease(

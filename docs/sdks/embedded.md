@@ -14,16 +14,16 @@ Feather supports two deployment models. **Embedded mode is recommended** for mos
 
 ## When to use embedded mode
 
-Use `FeatherApp` + `startEmbedded()` when:
+Use `FeatherApp` + `start_embedded()` when:
 
-- You run a web API (Express, FastAPI, Django) and want background jobs **in the same deployment**
+- You run a web API (FastAPI, Django) and want background jobs **in the same deployment**
 - You don't want to manage a second worker service
 - Job volume fits one process (most apps)
 
-```javascript
-// One Node process: HTTP server + worker loop
-await app.startEmbedded();
-await app.delay("send-email", { to: "..." });
+```python
+# One Python process: HTTP handlers + worker loop
+await app.start_embedded()
+app.delay("send-email", {"to": "..."})
 ```
 
 ## When to use a dedicated worker
@@ -49,30 +49,17 @@ You do **not** need a separate worker **container** unless you choose dedicated 
 
 Enable the bundled UI from SDK config — no separate dashboard service:
 
-```javascript
-const app = new FeatherApp({ ui: { enabled: true, port: 3001 } });
-await app.startEmbedded();
+```python
+app = FeatherApp(ui={"enabled": True, "port": 3001})
+await app.start_embedded()
 ```
 
 See [Embedded monitoring UI](ui.md).
 
-## Node.js
-
-```javascript
-import { FeatherApp } from "@arbitrage/feather";
-
-const app = new FeatherApp();
-app.task("my-job", async (ctx) => { /* ... */ });
-await app.startEmbedded();
-await app.delay("my-job", { data: 1 });
-```
-
-See [Node.js SDK](node.md) and `examples/embedded-node/`.
-
 ## Python
 
 ```python
-from arbitrage.feather import FeatherApp
+from getfeather import FeatherApp
 
 app = FeatherApp()
 app.task("my-job", handler)

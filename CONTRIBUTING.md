@@ -2,12 +2,14 @@
 
 ## Development setup
 
-1. Install Rust 1.78+, Node 20+, Python 3.11+, Docker, `protoc`.
+1. Install Rust 1.78+, Node 20+ (for UI/docs builds), Python 3.11+, Docker, `protoc`.
 2. Start Redis: `docker compose -f docker/docker-compose.yml up redis -d`
 3. Run server: `cargo run --manifest-path packages/server/Cargo.toml`
-4. Build SDKs (bundles protos + UI):
+4. Build Python SDK (bundles protos + UI):
    ```bash
-   cd packages/sdk-node && npm install && npm run build
+   chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh
+   ./scripts/bundle-protos.sh
+   ./scripts/bundle-ui.sh
    pip install ./packages/sdk-python
    ```
 
@@ -23,7 +25,7 @@ Or individual targets:
 
 ```bash
 FEATHER_INTEGRATION=1 cargo test --manifest-path packages/server/Cargo.toml
-node --test tests/contract/node_contract.test.mjs
+python tests/contract/python_contract.py
 cd apps/docs && npm run build
 cd packages/ui && npm run build
 ```
@@ -38,13 +40,13 @@ cd packages/ui && npm run build
 
 When adding user-facing features, update `docs/` and the relevant `meta.json`.
 
-## Release SDKs
+## Release SDK
 
-Actions → **Release** → **Run workflow** with a semver (e.g. `0.1.2`). CI publishes `@arbitrage/feather` to npm and `arbitrage-feather` to PyPI.
+Actions → **Release** → **Run workflow** with a semver (e.g. `0.2.0`). CI publishes `getfeather` to PyPI.
 
-Required secrets: `NPM_TOKEN`, `PYPI_API_TOKEN`. See [docs/operations/publishing.md](docs/operations/publishing.md).
+Required secret: `PYPI_API_TOKEN`. See [docs/operations/publishing.md](docs/operations/publishing.md).
 
-Local dry-run: `./scripts/release-dry-run.sh 0.1.0`
+Local dry-run: `./scripts/release-dry-run.sh 0.2.0`
 
 ## Monorepo structure
 
@@ -52,9 +54,8 @@ Local dry-run: `./scripts/release-dry-run.sh 0.1.0`
 |------|---------|
 | `packages/proto/` | Protobuf definitions |
 | `packages/server/` | Rust server crate |
-| `packages/ui/` | Monitoring SPA (bundled into SDKs) |
-| `packages/sdk-node/` | Node.js SDK (`@arbitrage/feather`) |
-| `packages/sdk-python/` | Python SDK |
+| `packages/ui/` | Monitoring SPA (bundled into Python SDK) |
+| `packages/sdk-python/` | Python SDK (`getfeather`) |
 | `apps/docs/` | Fumadocs site (Vercel) |
 | `apps/dashboard/` | Optional standalone dashboard (Docker) |
 | `examples/` | Sample workers |

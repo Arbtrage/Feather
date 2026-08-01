@@ -4,47 +4,14 @@ Enable Feather's read-only monitoring UI from the SDK — no separate dashboard 
 
 ## Overview
 
-When `ui.enabled` is set, the SDK serves a local web UI (queue stats, jobs list, job detail) from static assets bundled in `@arbitrage/feather` / `arbitrage-feather`. The UI reads from your **feather-server admin HTTP API** (default `http://localhost:8080`).
+When `ui.enabled` is set, the SDK serves a local web UI (queue stats, jobs list, job detail) from static assets bundled in `getfeather`. The UI reads from your **feather-server admin HTTP API** (default `http://localhost:8080`).
 
 You still run feather-server + Redis yourself. The UI runs inside your application process, similar to embedded workers.
-
-## Node.js
-
-```javascript
-import { FeatherApp } from "@arbitrage/feather";
-
-const app = new FeatherApp({
-  address: "localhost:50051",
-  ui: {
-    enabled: true,
-    port: 3001,
-    adminUrl: "http://localhost:8080",
-  },
-});
-
-app.task("echo", async (ctx) => { /* ... */ });
-
-await app.startEmbedded(); // starts worker + UI when ui.enabled
-// UI: http://127.0.0.1:3001
-```
-
-Or start UI separately:
-
-```javascript
-await app.startEmbedded();
-await app.startUI();
-```
-
-Start both explicitly:
-
-```javascript
-await app.startEmbedded({ ui: true });
-```
 
 ## Python
 
 ```python
-from arbitrage.feather import FeatherApp
+from getfeather import FeatherApp
 
 app = FeatherApp(
     address="localhost:50051",
@@ -54,6 +21,7 @@ app = FeatherApp(
 app.task("echo", lambda ctx: None)
 
 await app.start_embedded()  # worker + UI when ui.enabled
+# UI: http://127.0.0.1:3001
 ```
 
 ## Configuration
@@ -62,8 +30,8 @@ await app.start_embedded()  # worker + UI when ui.enabled
 |--------|---------|---------|-------------|
 | `ui.enabled` | — | `false` | Serve monitoring UI |
 | `ui.port` | — | `3001` | Local HTTP port |
-| `ui.adminUrl` / `admin_url` | `FEATHER_ADMIN_URL` | `http://localhost:8080` | Admin API base URL |
-| `ui.openBrowser` / `open_browser` | — | `false` | Open browser on start |
+| `ui.admin_url` | `FEATHER_ADMIN_URL` | `http://localhost:8080` | Admin API base URL |
+| `ui.open_browser` | — | `false` | Open browser on start |
 
 ## CORS
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import signal
 import sys
@@ -42,10 +43,14 @@ class Worker:
         address: str | None = None,
         worker_id: str | None = None,
         queues: list[str] | None = None,
+        max_jobs: int = 1,
+        max_concurrency: int | None = None,
     ) -> None:
         self.address = address or os.environ.get("FEATHER_ADDRESS", "localhost:50051")
         self.worker_id = worker_id or f"python-{uuid.uuid4().hex[:8]}"
         self.queues = queues or ["default"]
+        self.max_jobs = max(1, max_jobs)
+        self.max_concurrency = max(1, max_concurrency or self.max_jobs)
         self._handlers: dict[str, Handler] = {}
         self._running = False
         self._lease_ms = 30_000
@@ -99,12 +104,42 @@ class Worker:
                     worker_id=self.worker_id,
                     queues=self.queues,
                     wait_timeout_ms=30_000,
+                    max_jobs=self.max_jobs,
                 )
             )
-            if not res.job.id:
+            jobs = list(res.jobs) if res.jobs else []
+            if not jobs and res.job.id:
+                jobs = [res.job]
+            if not jobs:
                 await asyncio.sleep((res.backoff_hint_ms or 500) / 1000)
                 continue
-            await self._handle_job(res.job)
+
+            if len(jobs) == 1:
+                await self._handle_job(jobs[0])
+                continue
+
+            sem = asyncio.Semaphore(self.max_concurrency)
+
+            async def _run(job: Any) -> None:
+                async with sem:
+                    await self._handle_job(job)
+
+            async with asyncio.TaskGroup() as tg:
+                for job in jobs:
+                    tg.create_task(_run(job))
+
+    async def _lease_renewal_loop(self, job_id: str) -> None:
+        assert self._queue_stub is not None and self._queue_pb2 is not None
+        interval = self._lease_ms / 2 / 1000
+        while True:
+            await asyncio.sleep(interval)
+            await self._queue_stub.ExtendLease(
+                self._queue_pb2.ExtendLeaseRequest(
+                    job_id=job_id,
+                    worker_id=self.worker_id,
+                    extension_ms=self._lease_ms,
+                )
+            )
 
     async def _handle_job(self, job: Any) -> None:
         assert self._queue_stub is not None and self._queue_pb2 is not None
@@ -133,11 +168,17 @@ class Worker:
         if not handler:
             await nack(f"no handler for {job.name}")
             return
+
+        renew_task = asyncio.create_task(self._lease_renewal_loop(job.id))
         try:
             await handler(ctx)
             await ack()
         except Exception as exc:
             await nack(str(exc))
+        finally:
+            renew_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await renew_task
 
     async def start(self) -> None:
         """Block until stopped — dedicated worker process."""

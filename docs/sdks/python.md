@@ -1,19 +1,27 @@
 # Python SDK
 
-Package: `arbitrage-feather` on [PyPI](https://pypi.org/project/arbitrage-feather/) (monorepo: `packages/sdk-python/`)
+Package: `getfeather` on [PyPI](https://pypi.org/project/getfeather/) (monorepo: `packages/sdk-python/`)
 
 Requires Python 3.11+.
 
 ## Install
 
 ```bash
-pip install arbitrage-feather
+pip install getfeather
+uv pip install getfeather
+pipx install getfeather
+```
+
+In a uv-managed project:
+
+```bash
+uv add getfeather
 ```
 
 ## Celery-style embedded mode (recommended)
 
 ```python
-from arbitrage.feather import FeatherApp
+from getfeather import FeatherApp
 
 app = FeatherApp()
 
@@ -30,7 +38,7 @@ See [Embedded mode](embedded.md).
 ## FeatherClient (enqueue only)
 
 ```python
-from arbitrage.feather import FeatherClient
+from getfeather import FeatherClient
 
 client = FeatherClient()  # uses FEATHER_ADDRESS env var
 
@@ -53,12 +61,12 @@ Set `FEATHER_ADDRESS` to override the default (`localhost:50051`).
 
 ## Worker
 
-Async worker with the same surface area as the Node SDK:
+Async worker for dedicated processes:
 
 ```python
 import asyncio
 import json
-from arbitrage.feather import Worker
+from getfeather import Worker
 
 async def echo(ctx):
     data = json.loads(ctx.payload.decode())
@@ -75,9 +83,15 @@ asyncio.run(main())
 ### Features
 
 - Async gRPC via `grpc.aio`
-- Long-poll dequeue with backoff
+- Server-side blocking dequeue (Redis BRPOP) — no client poll loop
+- Auto lease renewal at 50% TTL via `ExtendLease`
+- Optional batch dequeue (`max_jobs`) with bounded concurrency
 - Periodic heartbeat
 - Graceful shutdown on SIGINT/SIGTERM
+
+```python
+worker = Worker(max_jobs=8, max_concurrency=4)
+```
 
 ## Example
 
@@ -89,14 +103,4 @@ python worker.py          # worker
 python enqueue.py         # enqueue 10 jobs
 ```
 
-## Cross-language
-
-Python workers can process jobs enqueued by Node.js (and vice versa). The gRPC protocol and proto definitions are language-agnostic.
-
-```bash
-# Terminal 1: Python worker
-python examples/python-worker/worker.py
-
-# Terminal 2: Node enqueue
-cd examples/node-worker && npm run enqueue
-```
+Also see `examples/embedded-python/` for Celery-style embedded mode.

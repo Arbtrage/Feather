@@ -31,37 +31,27 @@ jobs:
           FEATHER_REDIS_URL: redis://127.0.0.1:6379
         run: cargo test --manifest-path packages/server/Cargo.toml
 
-  node:
+  python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: build sdk
-        run: |
-          chmod +x scripts/bundle-ui.sh
-          ./scripts/bundle-ui.sh
-          cd packages/sdk-node && npm install && npm run build
-      - name: contract tests
-        run: node --test tests/contract/node_contract.test.mjs
-
-  python:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: install sdk
+      - name: build ui and install sdk
         run: |
-          pip install grpcio-tools
           chmod +x scripts/bundle-protos.sh scripts/bundle-ui.sh
-          ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
+          pip install grpcio-tools
+          ./scripts/bundle-protos.sh
           pip install ./packages/sdk-python
       - name: import check
-        run: python -c "from arbitrage.feather import FeatherApp, FeatherClient, Worker"
+        run: python -c "from getfeather import FeatherApp, FeatherClient, Worker"
+      - name: contract tests
+        run: python tests/contract/python_contract.py
 
   dashboard:
     runs-on: ubuntu-latest
@@ -90,7 +80,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: build ui and bundle into sdks
+      - name: build ui and bundle into python sdk
         run: |
           chmod +x scripts/bundle-ui.sh
           ./scripts/bundle-ui.sh
