@@ -1,4 +1,4 @@
-import { Worker } from "@arbtrage/feather";
+import { Worker } from "@arbitrage/feather";
 
 const worker = new Worker({
   address: process.env.FEATHER_ADDRESS ?? "localhost:50051",

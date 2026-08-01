@@ -1,21 +1,19 @@
 # Python SDK
 
-Package: `feather-sdk` — wheel attached to each [GitHub Release](https://github.com/Arbtrage/Feather/releases) (monorepo: `packages/sdk-python/`)
+Package: `arbitrage-feather` on [PyPI](https://pypi.org/project/arbitrage-feather/) (monorepo: `packages/sdk-python/`)
 
 Requires Python 3.11+.
 
 ## Install
 
 ```bash
-pip install https://github.com/Arbtrage/Feather/releases/download/v0.1.0/feather_sdk-0.1.0-py3-none-any.whl
+pip install arbitrage-feather
 ```
-
-Replace `v0.1.0` with the release tag you need.
 
 ## Celery-style embedded mode (recommended)
 
 ```python
-from arbtrage.feather import FeatherApp
+from arbitrage.feather import FeatherApp
 
 app = FeatherApp()
 
@@ -32,7 +30,7 @@ See [Embedded mode](embedded.md).
 ## FeatherClient (enqueue only)
 
 ```python
-from arbtrage.feather import FeatherClient
+from arbitrage.feather import FeatherClient
 
 client = FeatherClient()  # uses FEATHER_ADDRESS env var
 
@@ -60,7 +58,7 @@ Async worker with the same surface area as the Node SDK:
 ```python
 import asyncio
 import json
-from arbtrage.feather import Worker
+from arbitrage.feather import Worker
 
 async def echo(ctx):
     data = json.loads(ctx.payload.decode())

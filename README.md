@@ -40,8 +40,8 @@ feather/
 │   ├── proto/            feather.v1 protobuf definitions
 │   ├── server/           Rust feather-server
 │   ├── ui/               Monitoring SPA (bundled into SDKs)
-│   ├── sdk-node/         @arbtrage/feather (GitHub Packages)
-│   └── sdk-python/       feather-sdk (GitHub Release)
+│   ├── sdk-node/         @arbitrage/feather (npm)
+│   └── sdk-python/       arbitrage-feather (PyPI)
 ├── docs/                 Documentation markdown source
 ├── examples/             Node & Python workers
 ├── docker/               Compose & Dockerfiles

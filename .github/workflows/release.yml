@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Semver to release (e.g. 0.1.0)"
+        description: "Semver to release (e.g. 0.1.2)"
         required: true
         type: string
       dry_run:
@@ -23,7 +23,6 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
       dry_run: ${{ steps.version.outputs.dry_run }}
-      npm_scope: ${{ steps.version.outputs.npm_scope }}
     steps:
       - id: version
         run: |
@@ -34,13 +33,10 @@ jobs:
             echo "invalid semver: $VERSION" >&2
             exit 1
           fi
-          OWNER="${{ github.repository_owner }}"
-          NPM_SCOPE="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "dry_run=$DRY" >> "$GITHUB_OUTPUT"
-          echo "npm_scope=$NPM_SCOPE" >> "$GITHUB_OUTPUT"
-          echo "Release $TAG (dry_run=$DRY, npm package=@${NPM_SCOPE}/feather)"
+          echo "Release $TAG (dry_run=$DRY)"
 
   validate:
     needs: resolve-version
@@ -64,7 +60,7 @@ jobs:
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
           npm ci
-          npm run build -w @arbtrage/feather
+          npm run build -w @arbitrage/feather
 
       - name: Build Python SDK
         run: |
@@ -84,14 +80,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          registry-url: https://npm.pkg.github.com
+          registry-url: https://registry.npmjs.org
 
       - uses: actions/setup-python@v5
         with:
@@ -105,26 +100,26 @@ jobs:
           ./scripts/bundle-protos.sh
           ./scripts/bundle-ui.sh
           npm ci
-          npm run build -w @arbtrage/feather
+          npm run build -w @arbitrage/feather
           test -d packages/sdk-node/ui-static/assets
           cd packages/sdk-python && python -m build
           python -m pip install "twine>=6.1.0"
           python -m twine check dist/*
-          test -d arbtrage/feather/ui_static/assets
+          test -d arbitrage/feather/ui_static/assets
 
-      - name: Configure npm for GitHub Packages
-        working-directory: packages/sdk-node
-        run: |
-          SCOPE="${{ needs.resolve-version.outputs.npm_scope }}"
-          npm pkg set "name=@${SCOPE}/feather"
-          npm pkg set "publishConfig.registry=https://npm.pkg.github.com"
-          npm pkg fix
-
-      - name: Publish @${{ needs.resolve-version.outputs.npm_scope }}/feather to GitHub Packages
+      - name: Publish @arbitrage/feather to npm
         working-directory: packages/sdk-node
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish --access public
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm pkg fix
+          npm publish --access public
+
+      - name: Publish arbitrage-feather to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: python -m twine upload --verbose packages/sdk-python/dist/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -132,7 +127,6 @@ jobs:
           tag_name: ${{ needs.resolve-version.outputs.tag }}
           name: ${{ needs.resolve-version.outputs.tag }}
           generate_release_notes: true
-          files: packages/sdk-python/dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -143,19 +137,17 @@ jobs:
     steps:
       - name: Summary
         run: |
-          SCOPE="${{ needs.resolve-version.outputs.npm_scope }}"
           TAG="${{ needs.resolve-version.outputs.tag }}"
           VERSION="${{ needs.resolve-version.outputs.version }}"
-          REPO="${{ github.repository }}"
           echo "## Release ${TAG}" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Artifact | Location | Status |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|----------|----------|--------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| @${SCOPE}/feather | [GitHub Packages](https://github.com/${REPO}/pkgs/npm/feather) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| feather-sdk wheel/sdist | [Release ${TAG}](https://github.com/${REPO}/releases/tag/${TAG}) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Package | Registry | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---------|----------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| @arbitrage/feather | [npm](https://www.npmjs.com/package/@arbitrage/feather) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| arbitrage-feather | [PyPI](https://pypi.org/project/arbitrage-feather/) | ${{ needs.publish.result }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Install" >> "$GITHUB_STEP_SUMMARY"
           echo '```bash' >> "$GITHUB_STEP_SUMMARY"
-          echo "npm install @${SCOPE}/feather@${VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          echo "pip install https://github.com/${REPO}/releases/download/${TAG}/feather_sdk-${VERSION}-py3-none-any.whl" >> "$GITHUB_STEP_SUMMARY"
+          echo "npm install @arbitrage/feather@${VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          echo "pip install arbitrage-feather==${VERSION}" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "sdk-python"))
 
-from arbtrage.feather import Worker
+from arbitrage.feather import Worker
 
 
 async def echo(ctx) -> None:

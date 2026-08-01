@@ -1,92 +1,94 @@
 # Publishing SDKs
 
-Feather publishes SDKs through **GitHub Releases** and **GitHub Packages** (free for public repositories). No npmjs.com or PyPI account is required.
+Feather publishes **@arbitrage/feather** (npm) and **arbitrage-feather** (PyPI).
 
-| SDK | Where it lives |
-|-----|----------------|
-| Node.js `@arbtrage/feather` | [GitHub Packages](https://github.com/features/packages) (npm registry) |
-| Python `feather-sdk` | `.whl` + `.tar.gz` attached to each [GitHub Release](https://docs.github.com/en/repositories/releasing-projects-on-github) |
+## One-time setup
 
-GitHub Packages does not host a pip registry, so the Python wheel is uploaded as a release asset instead.
+Add these secrets in GitHub → Settings → Secrets and variables → Actions:
+
+| Secret | Purpose |
+|--------|---------|
+| `NPM_TOKEN` | npm automation token with publish access to `@arbitrage` |
+| `PYPI_API_TOKEN` | PyPI API token for `arbitrage-feather` |
+
+### npm organization (required)
+
+The Node package is **`@arbitrage/feather`**. npm returns `404 Not Found` on first publish if the **`@arbitrage` organization does not exist**.
+
+1. Sign in at [npmjs.com](https://www.npmjs.com)
+2. Create an organization named **`arbitrage`**
+3. Generate a **Granular Access Token** with read/write for the `arbitrage` org
+4. Add as repository secret `NPM_TOKEN`
+
+Verify:
+
+```bash
+npm whoami
+npm access ls-packages @arbitrage
+```
+
+### PyPI token
+
+1. [pypi.org](https://pypi.org) → Account → API tokens
+2. Scope: project `arbitrage-feather` (or entire account for first publish)
+3. Add as repository secret `PYPI_API_TOKEN`
+
+Optional: configure a GitHub **environment** named `pypi` with required reviewers.
 
 ## Publish a release
 
 1. Merge changes to `main`
 2. GitHub → **Actions** → **Release** → **Run workflow**
-3. Enter version (e.g. `0.1.0`) — do **not** include the `v` prefix
-4. Leave **dry_run** unchecked to tag, publish, and create the release
+3. Enter version (e.g. `0.1.2`) — no `v` prefix
+4. Leave **dry_run** unchecked
 
 The workflow will:
 
-1. Sync version to `packages/sdk-node/package.json` and `packages/sdk-python/pyproject.toml`
-2. Bundle protos, embedded UI static assets, and Python gRPC stubs
-3. Run validation (build + contract tests + `twine check`)
-4. Publish `@arbtrage/feather` to GitHub Packages
-5. Create a GitHub Release tagged `v0.1.0` with Python wheel/sdist attached
+1. Sync version across SDK manifests
+2. Build and validate both SDKs
+3. Publish to npm and PyPI
+4. Create a GitHub Release tag for changelog
 
-No extra secrets are needed — the workflow uses the built-in `GITHUB_TOKEN`.
-
-### npm scope note
-
-GitHub Packages requires the npm scope to match your GitHub org/username. For repo `Arbtrage/Feather`, the published package is **`@arbtrage/feather`** (derived from the GitHub owner name). The workflow sets this automatically at publish time.
-
-## Manual dry-run (local)
+## Install
 
 ```bash
-./scripts/release-dry-run.sh 0.1.0
+npm install @arbitrage/feather
+pip install arbitrage-feather
 ```
 
-## Manual CI dry-run
+### Node.js
 
-Actions → **Release** → **Run workflow** → enable **dry_run** (build + validate only).
+```javascript
+import { FeatherApp } from "@arbitrage/feather";
+```
 
-## Install published packages
+### Python
 
-### Node.js (GitHub Packages)
+```python
+from arbitrage.feather import FeatherApp
+```
 
-Public packages can be installed without authentication:
+No `.npmrc` or GitHub token required — packages live on the public registries.
+
+## Manual dry-run
 
 ```bash
-npm install @arbtrage/feather@0.1.0
-```
-
-If npm cannot resolve the scope, add a project `.npmrc`:
-
-```ini
-@arbtrage:registry=https://npm.pkg.github.com
-```
-
-For private repos, use a [personal access token](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry) with `read:packages`.
-
-### Python (GitHub Release asset)
-
-Replace `v0.1.0` with your release tag:
-
-```bash
-pip install https://github.com/Arbtrage/Feather/releases/download/v0.1.0/feather_sdk-0.1.0-py3-none-any.whl
-```
-
-Or download the wheel from the release page and install locally:
-
-```bash
-pip install ./feather_sdk-0.1.0-py3-none-any.whl
+./scripts/release-dry-run.sh 0.1.2
 ```
 
 ## Troubleshooting
 
-### npm publish fails: scope mismatch
+### npm: `404 Not Found`
 
-The npm scope must match your GitHub owner (`Arbtrage` → `@arbtrage`). The release workflow sets this automatically; do not rename the scope manually unless you also rename the GitHub org.
+- Create the **`@arbitrage`** npm organization
+- Regenerate `NPM_TOKEN` with org publish permissions
+- Re-run the release workflow with a new version
 
-### Python wheel missing UI assets
+### PyPI: `400 Bad Request`
 
-Confirm `scripts/bundle-ui.sh` ran — the wheel should include `arbtrage/feather/ui_static/`:
+- Use `hatchling>=1.27.0` and `twine>=6.1.0` (handled in CI)
+- Confirm `scripts/bundle-ui.sh` ran — wheel must include `arbitrage/feather/ui_static/`
 
-```bash
-./scripts/release-dry-run.sh 0.1.0
-unzip -l packages/sdk-python/dist/*.whl | grep ui_static
-```
+### Version already published
 
-### Release tag already exists
-
-Delete the tag in GitHub (Releases → delete, or `git push origin :refs/tags/v0.1.0`) before re-running the workflow for the same version.
+Bump the version — npm and PyPI do not allow republishing the same version.

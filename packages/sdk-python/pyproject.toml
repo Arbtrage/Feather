@@ -1,5 +1,5 @@
 [project]
-name = "feather-sdk"
+name = "arbitrage-feather"
 version = "0.1.0"
 description = "Feather durable execution platform — Python SDK"
 readme = "README.md"
@@ -20,13 +20,13 @@ requires = ["hatchling>=1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["arbtrage"]
+packages = ["arbitrage"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"arbtrage/feather/ui_static" = "arbtrage/feather/ui_static"
+"arbitrage/feather/ui_static" = "arbitrage/feather/ui_static"
 
 [tool.hatch.build.targets.sdist]
-include = ["arbtrage/**/*.py", "arbtrage/feather/proto/**/*.proto", "arbtrage/feather/ui_static/**/*"]
+include = ["arbitrage/**/*.py", "arbitrage/feather/proto/**/*.proto", "arbitrage/feather/ui_static/**/*"]
 
 [tool.hatch.build.targets.sdist.force-include]
-"arbtrage/feather/ui_static" = "arbtrage/feather/ui_static"
+"arbitrage/feather/ui_static" = "arbitrage/feather/ui_static"
